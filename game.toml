@@ -1,0 +1,31 @@
+[game]
+name = "Star Wars: Masters of Teras Kasi"
+id = "SLUS-00562"
+exe = "motk/SLUS_005.62"
+disc = "motk/Star Wars - Masters of Teras Kasi (USA).cue"
+load_address = "0x80010000"
+entry_pc = "0x80065A44"
+text_size = "0x0009B800"
+stack_base = "0x801FFFF0"
+
+[recompiler]
+seeds = "seeds/ghidra_funcs.txt"
+out_dir = "generated"
+strict = true
+
+[runtime]
+debug_port = 4520
+window_title = "Masters of Teras Kasi Recompiled"
+memcard_dir = "saves"
+disc_speed = "1x"
+bios_hle = true
+bios_hle_keep_intro = false
+fast_boot = false
+overlay_cache = true
+overlay_backend = "auto"
+turbo_loads = true
+turbo_audio_sink = true
+
+[video]
+renderer = "opengl"
+aspect_ratio = "4:3"
