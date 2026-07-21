@@ -1,8 +1,12 @@
 # Build MotK Release packages for Linux, Windows, macOS (arm64 + Intel).
 # Does not ship BIOS or disc images.
 #
-# Requires generated/ (recompiled game C) in the repo — private MotK tracks it
-# for CI. Regenerate locally with psxrecomp-game when seeds/overlays change.
+# Requires:
+#   - generated/ (recompiled game C) committed in this repo for CI.
+#   - Secret CI_ASSETS_TOKEN: fine-grained PAT with Contents:Read on
+#     TechnicallyComputers/psxrecomp-ci-assets (private). That repo supplies
+#     SCPH1001.zip (or loose SCPH1001_{full,dispatch}.c) for link-time BIOS C.
+#     Players still pick SCPH1001.BIN + disc at first launch; neither is in the zip.
 #
 # Triggers:
 #   - workflow_dispatch (manual)
@@ -60,11 +64,74 @@ jobs:
           submodules: recursive
           fetch-depth: 1
 
-      - name: Require generated game C
+      - name: Fetch BIOS CI assets (private)
+        uses: actions/checkout@v4
+        with:
+          repository: TechnicallyComputers/psxrecomp-ci-assets
+          token: ${{ secrets.CI_ASSETS_TOKEN }}
+          path: _ci-assets
+          fetch-depth: 1
+
+      - name: Install BIOS generated into psxrecomp/generated
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p psxrecomp/generated
+          if command -v python3 >/dev/null 2>&1; then PY=python3; else PY=python; fi
+          "$PY" - <<'PY'
+          import shutil
+          import zipfile
+          from pathlib import Path
+
+          dest = Path("psxrecomp/generated")
+          assets = Path("_ci-assets")
+          dest.mkdir(parents=True, exist_ok=True)
+
+          for name in (
+              "SCPH1001_full.c",
+              "SCPH1001_dispatch.c",
+              "SCPH1001.emitter.sha",
+          ):
+              src = assets / name
+              if src.is_file():
+                  shutil.copy2(src, dest / name)
+
+          for zpath in sorted(assets.rglob("*.zip")):
+              staging = dest / "_unzip"
+              if staging.exists():
+                  shutil.rmtree(staging)
+              staging.mkdir(parents=True)
+              with zipfile.ZipFile(zpath) as zf:
+                  zf.extractall(staging)
+              for p in staging.rglob("SCPH1001_*"):
+                  if p.is_file():
+                      shutil.copy2(p, dest / p.name)
+              for p in staging.rglob("SCPH1001.emitter.sha"):
+                  if p.is_file():
+                      shutil.copy2(p, dest / p.name)
+              shutil.rmtree(staging)
+
+          missing = [
+              n
+              for n in ("SCPH1001_full.c", "SCPH1001_dispatch.c")
+              if not (dest / n).is_file()
+          ]
+          if missing:
+              listing = sorted(p.name for p in assets.iterdir()) if assets.is_dir() else []
+              raise SystemExit(
+                  f"missing {missing} under psxrecomp/generated after install; "
+                  f"_ci-assets has: {listing}"
+              )
+          full = dest / "SCPH1001_full.c"
+          print(f"BIOS generated OK ({full.stat().st_size} bytes)")
+          PY
+
+      - name: Require generated game + BIOS C
+        shell: bash
         run: |
           set -euo pipefail
           if [[ ! -f generated/SLUS_005.62_dispatch.c ]]; then
-            echo "::error::generated/ is missing. Private MotK CI expects committed recompiler output."
+            echo "::error::generated/ is missing. MotK CI expects committed recompiler output."
             echo "Regenerate with psxrecomp-game --config game.toml and commit generated/."
             exit 1
           fi
@@ -74,6 +141,14 @@ jobs:
             exit 1
           fi
           echo "generated/ OK ($(ls generated/SLUS_005.62_full_*.c 2>/dev/null | wc -l) shards)"
+          for f in psxrecomp/generated/SCPH1001_full.c \
+                   psxrecomp/generated/SCPH1001_dispatch.c; do
+            if [[ ! -f "$f" ]]; then
+              echo "::error::missing $f — check CI_ASSETS_TOKEN and psxrecomp-ci-assets"
+              exit 1
+            fi
+          done
+          echo "BIOS generated/ OK"
 
       - name: Setup MSYS2 (Windows)
         if: runner.os == 'Windows'
