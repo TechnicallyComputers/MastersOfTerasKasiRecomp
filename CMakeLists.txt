@@ -4,12 +4,39 @@ project(MastersOfTerasKasiRecomp C CXX)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 17)
 
+# Release version pin for netplay lobby matching (baked as PSX_GAME_VERSION).
+# VERSION file at repo root is the source of truth for Release builds;
+# Debug/RelWithDebInfo stay "dev" unless -DPSX_GAME_VERSION=... is passed.
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" _MOTK_VER_RAW)
+string(STRIP "${_MOTK_VER_RAW}" MOTK_RELEASE_VERSION)
+set(PSX_GAME_VERSION "" CACHE STRING
+    "Lobby release pin (empty = Release uses VERSION file, else dev)")
+if(PSX_GAME_VERSION STREQUAL "")
+    get_property(_motk_is_multi GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+    if(_motk_is_multi)
+        # Release config → VERSION file; Debug/RelWithDebInfo → "dev".
+        set(PSX_GAME_VERSION "$<IF:$<CONFIG:Release>,${MOTK_RELEASE_VERSION},dev>")
+    elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+        set(PSX_GAME_VERSION "${MOTK_RELEASE_VERSION}")
+    else()
+        set(PSX_GAME_VERSION "dev")
+    endif()
+endif()
+message(STATUS "MotK lobby game_version: ${PSX_GAME_VERSION} (from VERSION=${MOTK_RELEASE_VERSION})")
+
 # Cross-TU inlining for MotK VLC/decode hot paths (psx_cyc_*, interrupt checks).
 # Release-only — Debug/RelWithDebInfo stay easier to step.
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
 
-# Tune for the build host (MotK FMV is load-delay / VLC host-bound).
-add_compile_options($<$<CONFIG:Release>:-march=native> $<$<CONFIG:Release>:-mtune=native>)
+# Host-tuned codegen helps MotK FMV on the build machine, but breaks portable
+# CI/release binaries. Default OFF; enable locally with -DMOTK_NATIVE=ON.
+option(MOTK_NATIVE "Tune Release for the build host (-march=native)" OFF)
+if(MOTK_NATIVE)
+    add_compile_options(
+        $<$<CONFIG:Release>:-march=native>
+        $<$<CONFIG:Release>:-mtune=native>)
+    message(STATUS "MotK: MOTK_NATIVE=ON (Release uses -march=native)")
+endif()
 
 # Profile-guided optimization for MotK intro FMV host path.
 #   cmake -DPSX_PGO=generate ... && ninja && run intro ~60s
@@ -29,9 +56,12 @@ endif()
 set(PSXRECOMP_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/psxrecomp" CACHE PATH
     "Path to psxrecomp")
 
-# Delay-sync netplay (recomp-net). Auto-discovered as ../recomp-net by
-# runtime.cmake when present. Lobby menu / matchmaking server are later work.
-# Disable with -DPSX_NETPLAY=OFF.
+# Prefer the framework-vendored recomp-net submodule (CI recursive checkout).
+# Still overridable with -DRECOMP_NET_ROOT=…; disable with -DPSX_NETPLAY=OFF.
+if(NOT RECOMP_NET_ROOT AND EXISTS "${PSXRECOMP_ROOT}/lib/recomp-net/CMakeLists.txt")
+    set(RECOMP_NET_ROOT "${PSXRECOMP_ROOT}/lib/recomp-net" CACHE PATH
+        "Path to recomp-net; empty = auto-discover" FORCE)
+endif()
 
 include("${PSXRECOMP_ROOT}/runtime/runtime.cmake")
 
@@ -53,4 +83,5 @@ psxrecomp_add_runtime_target(psx-runtime
     DEBUG_PORT 4520
     WINDOW_TITLE "Masters of Teras Kasi Recompiled"
     DEFAULT_GAME_CONFIG_PATH "game.toml"
+    GAME_VERSION "${PSX_GAME_VERSION}"
 )

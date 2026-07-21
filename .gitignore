@@ -4,11 +4,13 @@
 /out/
 /.happypath/
 
-# Recompiler output (derivative of copyrighted game code — regenerate locally)
-/generated/
+# Recompiler output is tracked in this private game repo so CI can build
+# without a disc. Regenerate with psxrecomp-game when seeds/overlays change.
+# (Still never commit BIOS / disc images — see /motk/ and /bios/ below.)
 
 # Release packaging artifacts
 /release-stage/
+/dist/
 *.zip
 
 # Local PlayStation assets (disc image, extracted boot EXE, memory cards)
