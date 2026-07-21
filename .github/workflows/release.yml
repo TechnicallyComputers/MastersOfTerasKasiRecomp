@@ -1,0 +1,161 @@
+# Build MotK Release packages for Linux, Windows, macOS (arm64 + Intel).
+# Does not ship BIOS or disc images.
+#
+# Requires generated/ (recompiled game C) in the repo — private MotK tracks it
+# for CI. Regenerate locally with psxrecomp-game when seeds/overlays change.
+#
+# Triggers:
+#   - workflow_dispatch (manual)
+#   - push tags matching v* (publishes a GitHub Release)
+
+name: Release builds
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: motk-release-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  CMAKE_BUILD_TYPE: Release
+
+jobs:
+  build:
+    name: ${{ matrix.artifact }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            artifact: linux-x64
+            shell: bash
+          - os: windows-2022
+            artifact: windows-x64
+            shell: 'msys2 {0}'
+          - os: macos-15
+            artifact: macos-arm64
+            shell: bash
+            deployment_target: '11.0'
+          - os: macos-15-intel
+            artifact: macos-x64
+            shell: bash
+            deployment_target: '11.0'
+
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Require generated game C
+        run: |
+          set -euo pipefail
+          if [[ ! -f generated/SLUS_005.62_dispatch.c ]]; then
+            echo "::error::generated/ is missing. Private MotK CI expects committed recompiler output."
+            echo "Regenerate with psxrecomp-game --config game.toml and commit generated/."
+            exit 1
+          fi
+          if ! compgen -G 'generated/SLUS_005.62_full_*.c' >/dev/null && \
+             [[ ! -f generated/SLUS_005.62_full.c ]]; then
+            echo "::error::generated/ has no SLUS_005.62_full_*.c shards (or full.c)."
+            exit 1
+          fi
+          echo "generated/ OK ($(ls generated/SLUS_005.62_full_*.c 2>/dev/null | wc -l) shards)"
+
+      - name: Setup MSYS2 (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-SDL2
+            mingw-w64-x86_64-pkgconf
+            zip
+
+      - name: Install deps (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build pkg-config libsdl2-dev zip
+
+      - name: Install deps (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install cmake ninja pkg-config sdl2
+          # zip is preinstalled on macOS runners
+
+      - name: Configure & build
+        env:
+          CMAKE_OSX_DEPLOYMENT_TARGET: ${{ matrix.deployment_target || '' }}
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          EXTRA=()
+          if [[ -n "${CMAKE_OSX_DEPLOYMENT_TARGET:-}" ]]; then
+            EXTRA+=("-DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}")
+          fi
+          cmake -S . -B build-ci -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DMOTK_NATIVE=OFF \
+            -DPSX_GAME_VERSION="${VERSION}" \
+            "${EXTRA[@]}"
+          cmake --build build-ci --target psx-runtime -j"$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
+
+      - name: Package
+        run: |
+          set -euo pipefail
+          chmod +x scripts/package_release.sh
+          scripts/package_release.sh build-ci "${{ matrix.artifact }}"
+          ls -la dist/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: motk-${{ matrix.artifact }}
+          path: dist/motk-*-${{ matrix.artifact }}.zip
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    name: GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: false
+
+      - name: Flatten zips
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          find artifacts -type f -name 'motk-*.zip' -exec cp -v {} dist/ \;
+          ls -la dist/
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/motk-*.zip
+          generate_release_notes: true
+          fail_on_unmatched_files: true
