@@ -11,9 +11,12 @@ faithful load-delay. **LTO-only ≈ ~39 med; MotK intro PGO (`PSX_PGO=use`)
 starfield path is fixed (below). Remaining FMV cost is VLC
 `0x8006A9F8`/`0x8006CBE4` + load-delay.
 
-**Netplay (2026-07-20):** Same-machine FMV ~40–42 is the lockstep floor
-(two offline intros stay ~59; not GL present). Barrier uses UDP `poll()`;
-localhost peers pin to disjoint CPU halves. Offline still full speed.
+**Netplay (2026-07-21):** Same-machine FMV ~30–40 was the rematch-safe
+`finish→admit→pace→present` order (depth24 CPU present after admit), not
+lockstep itself (gameplay stays ~60). Restored early-build
+`finish→present→admit/pace` plus half-rate depth24 present skip. Rebuild
+`build-release`; verify intro FPS + tick-0 arm. Barrier still UDP
+`poll()`; pin localhost peers to disjoint CPU halves. Offline full speed.
 
 **Netplay saves (2026-07-20):** Host owns save/load + memcard sync.
 Guest writes only `saves/netplay/`. Flow: local save (both) → hash probe →
