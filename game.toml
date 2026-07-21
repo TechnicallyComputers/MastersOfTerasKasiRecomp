@@ -12,12 +12,14 @@ stack_base = "0x801FFFF0"
 seeds = "seeds/ghidra_funcs.txt"
 out_dir = "generated"
 strict = true
+# Intro FMV VLC leaves (phase_hot static samples) — host locality only.
+hot_funcs = ["0x8006A9F8", "0x8006CBE4"]
 
 [runtime]
 debug_port = 4520
 window_title = "Masters of Teras Kasi Recompiled"
 memcard_dir = "saves"
-disc_speed = "1x"
+disc_speed = "4x"
 bios_hle = true
 bios_hle_keep_intro = false
 fast_boot = false
@@ -25,6 +27,13 @@ overlay_cache = true
 overlay_backend = "auto"
 turbo_loads = true
 turbo_audio_sink = true
+idle_skip = true
+
+# load_accel.vsync_query is intentionally OFF for MotK.
+# A/B 2026-07-18: with VSync(-1) HLE enabled, intro STR never starts MDEC
+# (mdec_decode_count stayed 0, display disabled). With it disabled, MDEC/XA
+# run. Event-horizon_any made that worse (raced guest time). Re-enable only
+# after the HLE is validated against MotK FMV (not just the inter-movie gap).
 
 [video]
 renderer = "opengl"

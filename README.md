@@ -40,17 +40,22 @@ python3 tools/prepare_disc.py
 ./psxrecomp/recompiler/build/psxrecomp-game --config game.toml
 ```
 
-3. Configure and build the runtime target:
+3. Configure and build the runtime target. Prefer **Release** for playtesting
+   (RelWithDebInfo turns on the TCP debug server and is much slower):
 
 ```bash
-cmake -S . -B build
-cmake --build build --target psx-runtime -j"$(nproc)"
-./build/psx-runtime --game game.toml --disc "motk/Star Wars - Masters of Teras Kasi (USA).cue"
+cmake -S . -B build-release -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build-release --target psx-runtime -j"$(nproc)"
+
+./build-release/Masters_of_Teras_Kasi_Recompiled \
+  --game game.toml \
+  --disc "motk/Star Wars - Masters of Teras Kasi (USA).cue"
 ```
 
-Debug TCP port: **4520**.
+For debugging (port **4520**), use `-DCMAKE_BUILD_TYPE=RelWithDebInfo` and
+`./build/Masters_of_Teras_Kasi_Recompiled` instead.
 
 ## Status
 
-Scaffold only — disc prepared, EXE extracted, seeds auto-scanned from JAL
-targets. Recompile / boot / netcode bring-up not started yet.
+Boots far enough to present video/audio. Known bring-up costs: heavy dirty-RAM
+interpretation (stuttery audio until more seeds/overlays land). See `ISSUES.md`.
