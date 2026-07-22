@@ -28,6 +28,11 @@ overlay_backend = "auto"
 turbo_loads = true
 turbo_audio_sink = true
 idle_skip = true
+# Enhancement: force load-delay off for the offline session. MotK A/B
+# 2026-07-22: session arm → ~450 FPS but intro STR never starts MDEC
+# (same failure mode as load_accel.vsync_query). Keep OFF; faithful
+# delay holds ~45–55 intro FPS. Env PSX_FMV_LOAD_DELAY_RELAX=1 to A/B.
+fmv_load_delay_relax = false
 
 # load_accel.vsync_query is intentionally OFF for MotK.
 # A/B 2026-07-18: with VSync(-1) HLE enabled, intro STR never starts MDEC

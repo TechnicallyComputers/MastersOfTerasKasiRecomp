@@ -6,10 +6,24 @@
 
 With video/audio decoding, Release intro FMV is still host-bound under
 faithful load-delay. **LTO-only ≈ ~39 med; MotK intro PGO (`PSX_PGO=use`)
-≈ ~50 med offline.** Keep `build-release` on PGO; regenerate with
-`scripts/pgo_motk_intro.sh` after large runtime edits. Title/char-select
-starfield path is fixed (below). Remaining FMV cost is VLC
-`0x8006A9F8`/`0x8006CBE4` + load-delay.
+≈ ~48–50 med offline.** `PSX_RUNTIME_PERF_DIAG=1`: guest work ≈920 ms/s
+during FMV (present/GL upload not the tax). Keep `build-release` on PGO;
+regenerate with `scripts/pgo_motk_intro.sh` after large runtime edits.
+
+**Enhancement (2026-07-22) — rejected for MotK default:** session-scoped
+`fmv_load_delay_relax` hits ~450–500 FPS but **intro STR never starts MDEC**
+(same class of race as `load_accel.vsync_query`). Keep
+`fmv_load_delay_relax = false`; faithful intro ~45–55 FPS is acceptable.
+`PSX_FMV_LOAD_DELAY_RELAX=1` remains for A/B only.
+
+**2026-07-21 lever (landed, FPS floor unchanged):** MotK patches
+`0x80075F20` (`lui` 0x8007→0x8010); software delay at `0x80075F3C` was
+stuck in dirty-RAM interp because exact-range checks covered the whole
+function. Runtime now clips ranges at the resume PC and hands
+continuations back to compiled (`native_handoffs≈15.8k`, mismatches
+~198k→~3.9k; `0x80075F3C` gone from top dirty). FMV-band still ~45 med
+— residual is VLC leaves `0x8006A9F8`/`0x8006CBE4` / load-delay volume
+(emitter-level charge batching still open).
 
 **Netplay (2026-07-21):** Same-machine FMV ~30–40 was the rematch-safe
 `finish→admit→pace→present` order (depth24 CPU present after admit), not
@@ -76,14 +90,21 @@ Two layered bugs:
 
 CD-only `spu_render` kept. Intro host FPS still ~40–50 under load-delay.
 
-### FMV right-edge junk after rematch (2026-07-19/20) — FIXED (verify)
+### FMV right-edge junk after rematch (2026-07-19/21) — FIXED (verify)
 
 With 512 RGB width restored, intros are framed correctly. Present never
-crops draw width (that caused a flickering black pillar). Trailing junk
-is black-filled in-buffer when chroma is *dense* in the last ~8 cols —
-not column-replicated (replication smeared the 2nd intro starfield into
-a flickering stretch). Rebuild: `build-release` with `PSX_PGO=use`.
-Confirm 2nd intro right edge stays clean.
+crops draw width. MotK stays in depth24 across intros; trailing cols are
+stale `0x8000` → green/magenta. Policy: blank beyond tracked A0 span;
+**always blank last 8 RGB cols in depth24**; collapse span only on
+FB-class A0s (`w >= 256`); on GP1(07h) height change: reset span + **3
+vblank present-hold** (skip Swap, pin trailing-8, no collapse). Rebuild:
+`build-release`. Confirm intro→crawl cut (no right-edge flicker).
+
+### FMV host FPS ~45–50 offline (2026-07-21) — known floor
+
+Windowed offline intro settles ~45–50 game FPS with Release+PGO+native.
+Headless can hold ~59. This is host MDEC/present cost, not a failed
+rebuild — see `docs/PGO.md` / psxrecomp `ISSUES` timing log.
 
 ### Fake 60 FPS / no video (2026-07-18)
 
