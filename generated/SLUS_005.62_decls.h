@@ -4,8 +4,6 @@
 
 #ifndef PSX_NO_DEBUG_TOOLS
 extern void debug_server_log_call_entry(uint32_t func_addr);
-#endif
-#ifndef PSX_NO_DEBUG_TOOLS
 extern void debug_server_cyc_observe(uint32_t block_leader_phys);
 #endif
 #ifdef PSX_COSIM
@@ -22,6 +20,8 @@ extern int32_t psx_ws_player_x_bound(int32_t vanilla);  /* typed gameplay X boun
 extern int  psx_ws_cull_sltiu(uint32_t sx, uint32_t imm);  /* ws auto screen-x cull (gpu.c) */
 extern int  psx_ws_cull_slti(uint32_t sx, uint32_t imm);   /* ws cull signed right edge (gpu.c) */
 extern int  psx_ws_cull_bltz(uint32_t v);                  /* ws cull signed left edge (gpu.c) */
+extern int  psx_ws_cull_vxrange(uint32_t x, uint32_t imm); /* ws masked-u16 X window */
+extern int32_t psx_ws_depth_bound(int32_t imm);            /* ws aspect-scaled far bound */
 extern int  psx_ws_backdrop_x(int x);  /* widescreen backdrop screenX squash (gpu.c) */
 extern int  psx_ws_bg2d_cols(int base);                    /* ws 2D bg tile-loop widen: col count (gpu.c) */
 extern int  psx_ws_bg2d_startcol(int col, unsigned mask);  /* ws 2D bg tile-loop widen: start tile col (gpu.c) */
@@ -76,6 +76,7 @@ static inline uint32_t psx_lwr(CPUState* cpu, uint32_t addr, uint32_t rt_value, 
  * rt_value is the value of the source register.
  */
 static inline void psx_swl(CPUState* cpu, uint32_t addr, uint32_t rt_value) {
+    psx_store_cycle_barrier();
     uint32_t aligned_addr = addr & ~3u;
     uint32_t word = cpu->read_word(aligned_addr);
     switch (addr & 3u) {
@@ -92,6 +93,7 @@ static inline void psx_swl(CPUState* cpu, uint32_t addr, uint32_t rt_value) {
  * rt_value is the value of the source register.
  */
 static inline void psx_swr(CPUState* cpu, uint32_t addr, uint32_t rt_value) {
+    psx_store_cycle_barrier();
     uint32_t aligned_addr = addr & ~3u;
     uint32_t word = cpu->read_word(aligned_addr);
     switch (addr & 3u) {
@@ -5344,6 +5346,9 @@ void func_8006A814(CPUState* cpu);
 void func_8006A874(CPUState* cpu);
 void func_8006A8FC(CPUState* cpu);
 void func_8006A9B8(CPUState* cpu);
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((hot))
+#endif
 void func_8006A9F8(CPUState* cpu);
 void func_8006AABC(CPUState* cpu);
 void func_8006AADC(CPUState* cpu);
@@ -5409,6 +5414,9 @@ void func_8006CB74(CPUState* cpu);
 void func_8006CBA4(CPUState* cpu);
 void func_8006CBC4(CPUState* cpu);
 void func_8006CBD4(CPUState* cpu);
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((hot))
+#endif
 void func_8006CBE4(CPUState* cpu);
 void func_8006CD2C(CPUState* cpu);
 void func_8006CDC8(CPUState* cpu);
@@ -5694,6 +5702,7 @@ void func_80075DE0(CPUState* cpu);
 void func_80075E10(CPUState* cpu);
 void func_80075E20(CPUState* cpu);
 void func_80075E30(CPUState* cpu);
+void func_80075E40(CPUState* cpu);
 void func_80075E98(CPUState* cpu);
 void func_80075F20(CPUState* cpu);
 void func_80075F50(CPUState* cpu);

@@ -58,6 +58,19 @@ cmake --build build-release --target psx-runtime -j"$(nproc)"
 For debugging (port **4520**), use `-DCMAKE_BUILD_TYPE=RelWithDebInfo` and
 `./build/Masters_of_Teras_Kasi_Recompiled` instead.
 
+### PGO (intro FMV host pace)
+
+Profile-guided optimization trains the compiler on a real MotK intro run.
+One-shot:
+
+```bash
+DISPLAY=:0 ./scripts/pgo_motk_intro.sh
+```
+
+Full write-up: [docs/PGO.md](docs/PGO.md) and
+[psxrecomp/docs/PGO.md](psxrecomp/docs/PGO.md). After large runtime edits,
+retrain so profiles stay fresh (`-DPSX_PGO=use` with stale `.gcda` underperforms).
+
 ## CI / release packages
 
 GitHub Actions workflow: `.github/workflows/release.yml`
