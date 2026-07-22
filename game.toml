@@ -1,8 +1,9 @@
 [game]
 name = "Star Wars: Masters of Teras Kasi"
 id = "SLUS-00562"
+players = 2
 exe = "motk/SLUS_005.62"
-disc = "motk/Star Wars - Masters of Teras Kasi (USA).cue"
+disc = "motk/Star Wars - Masters of Teras Kasi (USA).bin"
 load_address = "0x80010000"
 entry_pc = "0x80065A44"
 text_size = "0x0009B800"
@@ -38,3 +39,7 @@ idle_skip = true
 [video]
 renderer = "opengl"
 aspect_ratio = "4:3"
+
+[controller]
+default_mode = "digital"
+allow_hybrid = false
