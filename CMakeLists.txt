@@ -83,5 +83,6 @@ psxrecomp_add_runtime_target(psx-runtime
     DEBUG_PORT 4520
     WINDOW_TITLE "Masters of Teras Kasi Recompiled"
     DEFAULT_GAME_CONFIG_PATH "game.toml"
+    LAUNCHER_BOXART "${CMAKE_CURRENT_SOURCE_DIR}/launcher_assets/img/boxart.tga"
     GAME_VERSION "${PSX_GAME_VERSION}"
 )
