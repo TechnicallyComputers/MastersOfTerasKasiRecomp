@@ -89,9 +89,9 @@ GitHub Actions workflow: `.github/workflows/release.yml`
   `VERSION` — never BIOS/disc
 - CI pulls **mstan/psxrecomp@master** + MotK-root **recomp-ui@master**, and
   floats engine **recomp-net@main**
-- CI configures `-DRNET_ENABLE_ICE=ON` and `-DMOTK_NATIVE=OFF`. **Linux**
-  artifacts also run intro PGO train (needs LFS disc + `SCPH1001.BIN` in
-  `psxrecomp-ci-assets`); Windows/macOS stay Release+LTO only.
+- CI configures `-DRNET_ENABLE_ICE=ON` and `-DMOTK_NATIVE=OFF`. Every matrix
+  OS runs intro PGO train on that runner (needs LFS disc + `SCPH1001.BIN` in
+  `psxrecomp-ci-assets`; GCC `.gcda` on Linux/Windows, Clang profdata on macOS).
 - Local pack: `scripts/package_release.sh build-release linux-x64`
 
 Clone with submodules:
