@@ -41,25 +41,44 @@ endif()
 # Profile-guided optimization for MotK intro FMV host path.
 #   cmake -DPSX_PGO=generate ... && ninja && run intro ~60s
 #   cmake -DPSX_PGO=use ... && ninja
-# Profiles land in build-release/pgo/ (see scripts/pgo_motk_intro.sh).
+# Profiles land in ${CMAKE_BINARY_DIR}/pgo/ (see scripts/pgo_motk_intro.sh).
+# GCC: .gcda under PSX_PGO_DIR. Clang/AppleClang: .profraw → merge to
+# PSX_PGO_DIR/default.profdata before -DPSX_PGO=use (CI does this).
 set(PSX_PGO "" CACHE STRING "PGO mode: empty | generate | use")
 set(PSX_PGO_DIR "${CMAKE_BINARY_DIR}/pgo" CACHE PATH "PGO profile directory")
 if(PSX_PGO STREQUAL "generate")
     file(MAKE_DIRECTORY "${PSX_PGO_DIR}")
-    add_compile_options(-fprofile-generate=${PSX_PGO_DIR})
-    add_link_options(-fprofile-generate=${PSX_PGO_DIR})
+    if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+        add_compile_options(-fprofile-instr-generate)
+        add_link_options(-fprofile-instr-generate)
+    else()
+        add_compile_options(-fprofile-generate=${PSX_PGO_DIR})
+        add_link_options(-fprofile-generate=${PSX_PGO_DIR})
+    endif()
 elseif(PSX_PGO STREQUAL "use")
-    # After source edits, GCC floods -Wcoverage-mismatch / -Wmissing-profile
-    # against a stale .gcda set. Keep best-effort use (-fprofile-correction)
-    # but don't spam the build log — retrain via scripts/pgo_motk_intro.sh
-    # when you want fresh profiles.
-    add_compile_options(
-        -fprofile-use=${PSX_PGO_DIR}
-        -fprofile-correction
-        -Wno-coverage-mismatch
-        -Wno-missing-profile
-    )
-    add_link_options(-fprofile-use=${PSX_PGO_DIR})
+    if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+        set(_psx_pgo_profdata "${PSX_PGO_DIR}/default.profdata")
+        if(NOT EXISTS "${_psx_pgo_profdata}")
+            message(FATAL_ERROR
+                "PSX_PGO=use (Clang): missing ${_psx_pgo_profdata}. "
+                "Train with LLVM_PROFILE_FILE=.../pgo/motk-%p.profraw then "
+                "llvm-profdata merge -o default.profdata *.profraw")
+        endif()
+        add_compile_options("-fprofile-instr-use=${_psx_pgo_profdata}")
+        add_link_options("-fprofile-instr-use=${_psx_pgo_profdata}")
+    else()
+        # After source edits, GCC floods -Wcoverage-mismatch / -Wmissing-profile
+        # against a stale .gcda set. Keep best-effort use (-fprofile-correction)
+        # but don't spam the build log — retrain via scripts/pgo_motk_intro.sh
+        # when you want fresh profiles.
+        add_compile_options(
+            -fprofile-use=${PSX_PGO_DIR}
+            -fprofile-correction
+            -Wno-coverage-mismatch
+            -Wno-missing-profile
+        )
+        add_link_options(-fprofile-use=${PSX_PGO_DIR})
+    endif()
 endif()
 
 set(PSXRECOMP_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/psxrecomp" CACHE PATH

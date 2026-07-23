@@ -6,7 +6,7 @@
 #   - Secret CI_ASSETS_TOKEN: fine-grained PAT with Contents:Read on
 #     TechnicallyComputers/psxrecomp-ci-assets (private). That repo supplies:
 #       - SCPH1001.zip (or loose SCPH1001_{full,dispatch}.c) for link-time BIOS C
-#       - SCPH1001.BIN + motk/*.cue|*.bin (Git LFS) for Linux intro PGO train
+#       - SCPH1001.BIN + motk/*.cue|*.bin (Git LFS) for per-OS intro PGO train
 #     Players still pick BIOS + disc at first launch; neither is in the zip.
 #
 # Framework deps (not MotK gitlink pins):
@@ -14,8 +14,9 @@
 #   - MotK-root recomp-ui@master
 #   - nested recomp-net@main (engine transport; float past upstream pin)
 #
-# Linux packages are PGO-trained on the MotK intro (instrument → train → use).
-# Windows/macOS stay Release+LTO only (toolchains differ; train per-OS later).
+# All matrix packages are PGO-trained on the MotK intro (instrument → train →
+# use) on that runner's toolchain (GCC .gcda on Linux/Windows; Clang
+# .profraw→profdata on macOS). Profiles are not portable across OS/arch.
 #
 # Triggers:
 #   - workflow_dispatch (manual)
@@ -54,17 +55,17 @@ jobs:
           - os: windows-2022
             artifact: windows-x64
             shell: 'msys2 {0}'
-            pgo: false
+            pgo: true
           - os: macos-15
             artifact: macos-arm64
             shell: bash
             deployment_target: '11.0'
-            pgo: false
+            pgo: true
           - os: macos-15-intel
             artifact: macos-x64
             shell: bash
             deployment_target: '11.0'
-            pgo: false
+            pgo: true
 
     defaults:
       run:
@@ -232,7 +233,7 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           brew install cmake ninja pkg-config sdl2
-          # zip is preinstalled on macOS runners
+          # zip is preinstalled; llvm-profdata via xcrun / Xcode CLT
 
       - name: Configure & build (no PGO)
         if: ${{ !matrix.pgo }}
@@ -245,22 +246,32 @@ jobs:
           if [[ -n "${CMAKE_OSX_DEPLOYMENT_TARGET:-}" ]]; then
             EXTRA+=("-DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}")
           fi
+          JOBS="$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)"
           cmake -S . -B build-ci -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DMOTK_NATIVE=OFF \
             -DRNET_ENABLE_ICE=ON \
             -DPSX_GAME_VERSION="${VERSION}" \
             "${EXTRA[@]}"
-          cmake --build build-ci --target psx-runtime -j"$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
+          cmake --build build-ci --target psx-runtime -j"${JOBS}"
 
-      - name: Configure, PGO train intro, rebuild (Linux)
+      - name: Configure, PGO train intro, rebuild
         if: ${{ matrix.pgo }}
         env:
           PGO_TRAIN_SECS: '75'
           PGO_TRAIN_RUNS: '2'
+          CMAKE_OSX_DEPLOYMENT_TARGET: ${{ matrix.deployment_target || '' }}
         run: |
           set -euo pipefail
           VERSION="$(tr -d '[:space:]' < VERSION)"
+          JOBS="$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)"
+          LOGDIR="${TMPDIR:-/tmp}"
+          mkdir -p "${LOGDIR}"
+          EXTRA=()
+          if [[ -n "${CMAKE_OSX_DEPLOYMENT_TARGET:-}" ]]; then
+            EXTRA+=("-DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}")
+          fi
+
           DISC_CUE='motk/Star Wars - Masters of Teras Kasi (USA).cue'
           DISC_BIN='motk/Star Wars - Masters of Teras Kasi (USA).bin'
           BIOS_SRC=''
@@ -282,12 +293,12 @@ jobs:
             exit 1
           fi
           # Pointer files are ~130 bytes; real BIN is hundreds of MB.
-          BIN_SZ="$(wc -c < "_ci-assets/${DISC_BIN}")"
+          BIN_SZ="$(wc -c < "_ci-assets/${DISC_BIN}" | tr -d '[:space:]')"
           if [[ "${BIN_SZ}" -lt 100000000 ]]; then
             echo "::error::disc .bin is only ${BIN_SZ} bytes — Git LFS did not materialize"
             exit 1
           fi
-          BIOS_SZ="$(wc -c < "${BIOS_SRC}")"
+          BIOS_SZ="$(wc -c < "${BIOS_SRC}" | tr -d '[:space:]')"
           if [[ "${BIOS_SZ}" -lt 500000 || "${BIOS_SZ}" -gt 600000 ]]; then
             echo "::error::BIOS size ${BIOS_SZ} looks wrong (want ~512 KiB)"
             exit 1
@@ -297,7 +308,7 @@ jobs:
           cp -f "${BIOS_SRC}" bios/SCPH1001.BIN
           cp -f "_ci-assets/${DISC_CUE}" "${DISC_CUE}"
           cp -f "_ci-assets/${DISC_BIN}" "${DISC_BIN}"
-          echo "PGO train assets: bios=${BIOS_SZ} disc_bin=${BIN_SZ}"
+          echo "PGO train assets: bios=${BIOS_SZ} disc_bin=${BIN_SZ} jobs=${JOBS}"
 
           # 1) Instrumented build
           cmake -S . -B build-ci -G Ninja \
@@ -305,28 +316,36 @@ jobs:
             -DMOTK_NATIVE=OFF \
             -DRNET_ENABLE_ICE=ON \
             -DPSX_GAME_VERSION="${VERSION}" \
-            -DPSX_PGO=generate
-          cmake --build build-ci --target psx-runtime -j"$(nproc)"
+            -DPSX_PGO=generate \
+            "${EXTRA[@]}"
+          cmake --build build-ci --target psx-runtime -j"${JOBS}"
 
           EXE=./build-ci/Masters_of_Teras_Kasi_Recompiled
-          test -x "${EXE}"
+          if [[ -f "${EXE}.exe" ]]; then EXE="${EXE}.exe"; fi
+          if [[ ! -f "${EXE}" ]]; then
+            echo "::error::missing train binary ${EXE}"
+            ls -la build-ci | head -40
+            exit 1
+          fi
 
-          # 2) Train on logo+crawl (headless; merge .gcda across runs)
+          # 2) Train on logo+crawl (headless; merge profiles across runs)
           rm -rf build-ci/pgo
           mkdir -p build-ci/pgo
           export SDL_VIDEODRIVER=dummy
           export PSX_HEADLESS=1
+          # Clang/AppleClang instr-PGO; ignored by GCC gcov path.
+          export LLVM_PROFILE_FILE="${PWD}/build-ci/pgo/motk-%p.profraw"
           for run in $(seq 1 "${PGO_TRAIN_RUNS}"); do
             echo "PGO train run ${run}/${PGO_TRAIN_RUNS} (${PGO_TRAIN_SECS}s)..."
             "${EXE}" --no-launcher --headless \
               --game game.toml \
               --disc "${DISC_CUE}" \
               --bios bios/SCPH1001.BIN \
-              >"/tmp/motk_pgo_train_${run}.log" 2>&1 &
+              >"${LOGDIR}/motk_pgo_train_${run}.log" 2>&1 &
             MPID=$!
             sleep "${PGO_TRAIN_SECS}"
-            # Soft-stop: runtime maps SIGTERM/SIGINT → exit(0) so gcov
-            # atexit flushes .gcda. Bare kill without that leaves 0 profiles.
+            # Soft-stop: runtime maps SIGTERM/SIGINT → exit(0) so PGO
+            # writers flush. Bare kill without that leaves 0 profiles.
             if kill -0 "${MPID}" 2>/dev/null; then
               kill -TERM "${MPID}" 2>/dev/null || true
               for _ in $(seq 1 30); do
@@ -339,12 +358,33 @@ jobs:
               fi
             fi
             wait "${MPID}" 2>/dev/null || true
-            tail -20 "/tmp/motk_pgo_train_${run}.log" || true
+            tail -20 "${LOGDIR}/motk_pgo_train_${run}.log" || true
           done
-          N_GCDA="$(find build-ci -name '*.gcda' 2>/dev/null | wc -l)"
-          echo "PGO profiles: ${N_GCDA} .gcda under build-ci"
-          if [[ "${N_GCDA}" -lt 1 ]]; then
-            echo "::error::no PGO profiles written — train did not flush .gcda (soft-exit/gcov)"
+
+          N_GCDA="$(find build-ci -name '*.gcda' 2>/dev/null | wc -l | tr -d '[:space:]')"
+          N_PROFRAW="$(find build-ci -name '*.profraw' 2>/dev/null | wc -l | tr -d '[:space:]')"
+          echo "PGO profiles: ${N_GCDA} .gcda, ${N_PROFRAW} .profraw under build-ci"
+
+          if [[ "${N_PROFRAW}" -ge 1 ]]; then
+            if command -v llvm-profdata >/dev/null 2>&1; then
+              MERGE_BIN=(llvm-profdata)
+            elif xcrun --find llvm-profdata >/dev/null 2>&1; then
+              MERGE_BIN=(xcrun llvm-profdata)
+            else
+              echo "::error::llvm-profdata not found (needed to merge Clang .profraw)"
+              exit 1
+            fi
+            # bash 3.2-safe (macOS /bin/bash): no mapfile.
+            PROFRAWS=()
+            while IFS= read -r _pr; do
+              PROFRAWS+=("${_pr}")
+            done < <(find build-ci -name '*.profraw' -print)
+            "${MERGE_BIN[@]}" merge -sparse "${PROFRAWS[@]}" -o build-ci/pgo/default.profdata
+            ls -la build-ci/pgo/default.profdata
+          fi
+
+          if [[ "${N_GCDA}" -lt 1 && ! -f build-ci/pgo/default.profdata ]]; then
+            echo "::error::no PGO profiles written — train did not flush (soft-exit/PGO)"
             find build-ci -name '*.gcno' 2>/dev/null | head -20 || true
             exit 1
           fi
@@ -355,9 +395,10 @@ jobs:
             -DMOTK_NATIVE=OFF \
             -DRNET_ENABLE_ICE=ON \
             -DPSX_GAME_VERSION="${VERSION}" \
-            -DPSX_PGO=use
-          cmake --build build-ci --target psx-runtime -j"$(nproc)"
-          echo "Linux PGO package binary ready"
+            -DPSX_PGO=use \
+            "${EXTRA[@]}"
+          cmake --build build-ci --target psx-runtime -j"${JOBS}"
+          echo "PGO package binary ready (${{ matrix.artifact }})"
 
       - name: Package
         run: |
