@@ -1,17 +1,21 @@
 # Build MotK Release packages for Linux, Windows, macOS (arm64 + Intel).
-# Does not ship BIOS or disc images.
+# Does not ship BIOS or disc images in the player zip.
 #
 # Requires:
 #   - generated/ (recompiled game C) committed in this repo for CI.
 #   - Secret CI_ASSETS_TOKEN: fine-grained PAT with Contents:Read on
-#     TechnicallyComputers/psxrecomp-ci-assets (private). That repo supplies
-#     SCPH1001.zip (or loose SCPH1001_{full,dispatch}.c) for link-time BIOS C.
-#     Players still pick SCPH1001.BIN + disc at first launch; neither is in the zip.
+#     TechnicallyComputers/psxrecomp-ci-assets (private). That repo supplies:
+#       - SCPH1001.zip (or loose SCPH1001_{full,dispatch}.c) for link-time BIOS C
+#       - SCPH1001.BIN + motk/*.cue|*.bin (Git LFS) for Linux intro PGO train
+#     Players still pick BIOS + disc at first launch; neither is in the zip.
 #
 # Framework deps (not MotK gitlink pins):
-#   - mstan/psxrecomp@master (game-root UI + create ABI already upstream)
+#   - mstan/psxrecomp@master
 #   - MotK-root recomp-ui@master
 #   - nested recomp-net@main (engine transport; float past upstream pin)
+#
+# Linux packages are PGO-trained on the MotK intro (instrument → train → use).
+# Windows/macOS stay Release+LTO only (toolchains differ; train per-OS later).
 #
 # Triggers:
 #   - workflow_dispatch (manual)
@@ -46,17 +50,21 @@ jobs:
           - os: ubuntu-24.04
             artifact: linux-x64
             shell: bash
+            pgo: true
           - os: windows-2022
             artifact: windows-x64
             shell: 'msys2 {0}'
+            pgo: false
           - os: macos-15
             artifact: macos-arm64
             shell: bash
             deployment_target: '11.0'
+            pgo: false
           - os: macos-15-intel
             artifact: macos-x64
             shell: bash
             deployment_target: '11.0'
+            pgo: false
 
     defaults:
       run:
@@ -92,13 +100,33 @@ jobs:
           echo "recomp-ui=$(git -C recomp-ui rev-parse --short HEAD)"
           echo "recomp-net=$(git -C psxrecomp/lib/recomp-net rev-parse --short HEAD)"
 
-      - name: Fetch BIOS CI assets (private)
+      # Windows runners ship Git LFS; install only where apt/brew is needed.
+      # Use bash (not MSYS2) so this runs before setup-msys2.
+      - name: Install git-lfs (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends git-lfs
+          git lfs install
+
+      - name: Install git-lfs (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          brew install git-lfs
+          git lfs install
+
+      - name: Fetch CI assets (private, LFS)
         uses: actions/checkout@v4
         with:
           repository: TechnicallyComputers/psxrecomp-ci-assets
           token: ${{ secrets.CI_ASSETS_TOKEN }}
           path: _ci-assets
           fetch-depth: 1
+          lfs: true
 
       - name: Install BIOS generated into psxrecomp/generated
         shell: bash
@@ -206,7 +234,8 @@ jobs:
           brew install cmake ninja pkg-config sdl2
           # zip is preinstalled on macOS runners
 
-      - name: Configure & build
+      - name: Configure & build (no PGO)
+        if: ${{ !matrix.pgo }}
         env:
           CMAKE_OSX_DEPLOYMENT_TARGET: ${{ matrix.deployment_target || '' }}
         run: |
@@ -216,8 +245,6 @@ jobs:
           if [[ -n "${CMAKE_OSX_DEPLOYMENT_TARGET:-}" ]]; then
             EXTRA+=("-DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}")
           fi
-          # RNET_ENABLE_ICE=ON: online (non-LAN) lobbies need libjuice; FetchContent
-          # clones it when missing (needs network on the runner).
           cmake -S . -B build-ci -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DMOTK_NATIVE=OFF \
@@ -225,6 +252,99 @@ jobs:
             -DPSX_GAME_VERSION="${VERSION}" \
             "${EXTRA[@]}"
           cmake --build build-ci --target psx-runtime -j"$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
+
+      - name: Configure, PGO train intro, rebuild (Linux)
+        if: ${{ matrix.pgo }}
+        env:
+          PGO_TRAIN_SECS: '75'
+          PGO_TRAIN_RUNS: '2'
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          DISC_CUE='motk/Star Wars - Masters of Teras Kasi (USA).cue'
+          DISC_BIN='motk/Star Wars - Masters of Teras Kasi (USA).bin'
+          BIOS_SRC=''
+          for cand in \
+              '_ci-assets/SCPH1001.BIN' \
+              '_ci-assets/SCPH1001.bin' \
+              '_ci-assets/bios/SCPH1001.BIN' \
+              '_ci-assets/bios/SCPH1001.bin'; do
+            if [[ -f "$cand" ]]; then BIOS_SRC="$cand"; break; fi
+          done
+          if [[ -z "${BIOS_SRC}" ]]; then
+            echo "::error::SCPH1001.BIN missing under _ci-assets (need real BIOS for PGO train)"
+            find _ci-assets -maxdepth 2 -type f | head -40
+            exit 1
+          fi
+          if [[ ! -f "_ci-assets/${DISC_CUE}" || ! -f "_ci-assets/${DISC_BIN}" ]]; then
+            echo "::error::MotK cue/bin missing under _ci-assets/motk (LFS pull?)"
+            ls -la _ci-assets/motk || true
+            exit 1
+          fi
+          # Pointer files are ~130 bytes; real BIN is hundreds of MB.
+          BIN_SZ="$(wc -c < "_ci-assets/${DISC_BIN}")"
+          if [[ "${BIN_SZ}" -lt 100000000 ]]; then
+            echo "::error::disc .bin is only ${BIN_SZ} bytes — Git LFS did not materialize"
+            exit 1
+          fi
+          BIOS_SZ="$(wc -c < "${BIOS_SRC}")"
+          if [[ "${BIOS_SZ}" -lt 500000 || "${BIOS_SZ}" -gt 600000 ]]; then
+            echo "::error::BIOS size ${BIOS_SZ} looks wrong (want ~512 KiB)"
+            exit 1
+          fi
+
+          mkdir -p bios motk
+          cp -f "${BIOS_SRC}" bios/SCPH1001.BIN
+          cp -f "_ci-assets/${DISC_CUE}" "${DISC_CUE}"
+          cp -f "_ci-assets/${DISC_BIN}" "${DISC_BIN}"
+          echo "PGO train assets: bios=${BIOS_SZ} disc_bin=${BIN_SZ}"
+
+          # 1) Instrumented build
+          cmake -S . -B build-ci -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DMOTK_NATIVE=OFF \
+            -DRNET_ENABLE_ICE=ON \
+            -DPSX_GAME_VERSION="${VERSION}" \
+            -DPSX_PGO=generate
+          cmake --build build-ci --target psx-runtime -j"$(nproc)"
+
+          EXE=./build-ci/Masters_of_Teras_Kasi_Recompiled
+          test -x "${EXE}"
+
+          # 2) Train on logo+crawl (headless; merge .gcda across runs)
+          rm -rf build-ci/pgo
+          mkdir -p build-ci/pgo
+          export SDL_VIDEODRIVER=dummy
+          export PSX_HEADLESS=1
+          for run in $(seq 1 "${PGO_TRAIN_RUNS}"); do
+            echo "PGO train run ${run}/${PGO_TRAIN_RUNS} (${PGO_TRAIN_SECS}s)..."
+            "${EXE}" --no-launcher --headless \
+              --game game.toml \
+              --disc "${DISC_CUE}" \
+              --bios bios/SCPH1001.BIN \
+              >"/tmp/motk_pgo_train_${run}.log" 2>&1 &
+            MPID=$!
+            sleep "${PGO_TRAIN_SECS}"
+            kill "${MPID}" 2>/dev/null || true
+            wait "${MPID}" 2>/dev/null || true
+            tail -20 "/tmp/motk_pgo_train_${run}.log" || true
+          done
+          N_GCDA="$(find build-ci/pgo -name '*.gcda' 2>/dev/null | wc -l)"
+          echo "PGO profiles: ${N_GCDA} .gcda under build-ci/pgo"
+          if [[ "${N_GCDA}" -lt 1 ]]; then
+            echo "::error::no PGO profiles written — train did not run guest code"
+            exit 1
+          fi
+
+          # 3) Optimized rebuild using profiles
+          cmake -S . -B build-ci -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DMOTK_NATIVE=OFF \
+            -DRNET_ENABLE_ICE=ON \
+            -DPSX_GAME_VERSION="${VERSION}" \
+            -DPSX_PGO=use
+          cmake --build build-ci --target psx-runtime -j"$(nproc)"
+          echo "Linux PGO package binary ready"
 
       - name: Package
         run: |
