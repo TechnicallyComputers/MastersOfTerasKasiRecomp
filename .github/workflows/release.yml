@@ -9,8 +9,9 @@
 #     Players still pick SCPH1001.BIN + disc at first launch; neither is in the zip.
 #
 # Framework deps (not MotK gitlink pins):
-#   - mstan/psxrecomp@master
-#   - nested recomp-ui@master + recomp-net@main (float past upstream pins)
+#   - mstan/psxrecomp@master (+ MotK patches for create ABI / game-root UI)
+#   - MotK-root recomp-ui@master
+#   - nested recomp-net@main (engine transport; float past upstream pin)
 #
 # Triggers:
 #   - workflow_dispatch (manual)
@@ -69,26 +70,29 @@ jobs:
           submodules: false
           fetch-depth: 1
 
-      - name: Checkout psxrecomp upstream master + nested deps
+      - name: Checkout recomp-ui (game root) + psxrecomp upstream
         shell: bash
         run: |
           set -euo pipefail
+          # Game-owned UI pin at repo root.
+          git submodule update --init --depth=1 recomp-ui
+          git -C recomp-ui fetch --depth=1 origin master
+          git -C recomp-ui checkout -f FETCH_HEAD
+
           rm -rf psxrecomp
           git clone --depth=1 --branch master \
             https://github.com/mstan/psxrecomp.git psxrecomp
           git -C psxrecomp submodule sync
-          git -C psxrecomp submodule update --init --depth=1 \
-            lib/recomp-ui lib/recomp-net
-          # Float past the SHAs pinned inside upstream psxrecomp.
-          git -C psxrecomp/lib/recomp-ui fetch --depth=1 origin master
-          git -C psxrecomp/lib/recomp-ui checkout -f FETCH_HEAD
+          # Engine keeps recomp-net only — not recomp-ui.
+          git -C psxrecomp submodule update --init --depth=1 lib/recomp-net
           git -C psxrecomp/lib/recomp-net fetch --depth=1 origin main
           git -C psxrecomp/lib/recomp-net checkout -f FETCH_HEAD
-          # recomp-ui master expects create(..., char* endpoint, ..., int lan_only).
-          # Upstream psxrecomp master still has the old signature — bridge until merged.
+
+          # Bridge patches until upstream absorbs game-root UI + create ABI.
+          git -C psxrecomp apply ../patches/psxrecomp-recomp-ui-game-root.patch
           git -C psxrecomp apply ../patches/psxrecomp-ae_np_create-abi.patch
           echo "psxrecomp=$(git -C psxrecomp rev-parse --short HEAD) ($(git -C psxrecomp rev-parse HEAD))"
-          echo "recomp-ui=$(git -C psxrecomp/lib/recomp-ui rev-parse --short HEAD)"
+          echo "recomp-ui=$(git -C recomp-ui rev-parse --short HEAD)"
           echo "recomp-net=$(git -C psxrecomp/lib/recomp-net rev-parse --short HEAD)"
 
       - name: Fetch BIOS CI assets (private)
