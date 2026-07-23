@@ -87,8 +87,8 @@ GitHub Actions workflow: `.github/workflows/release.yml`
 - Tag `v0.1.0` (matching `VERSION`): builds + GitHub Release with zips
 - Packages include the exe, `assets/` (recomp-ui fonts/img), `game.toml`, and
   `VERSION` — never BIOS/disc
-- CI pulls **mstan/psxrecomp@master** + MotK-root **recomp-ui@master**, and
-  floats engine **recomp-net@main**
+- CI builds the exact committed **psxrecomp**, game-root **recomp-ui**, and
+  nested **recomp-net** gitlink pins
 - CI configures `-DRNET_ENABLE_ICE=ON` and `-DMOTK_NATIVE=OFF`. Every matrix
   OS runs intro PGO train on that runner (needs LFS disc + `SCPH1001.BIN` in
   `psxrecomp-ci-assets`; GCC `.gcda` on Linux/Windows, Clang profdata on macOS).
