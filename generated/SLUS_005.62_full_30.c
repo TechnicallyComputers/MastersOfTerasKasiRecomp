@@ -3,10 +3,8 @@
 
 void func_80071980(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -9830,10 +9828,8 @@ block_80072AE8:
 
 void func_80072B00(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -10072,10 +10068,8 @@ block_80072B2C:
 
 void func_80072B3C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -10511,10 +10505,8 @@ block_80072BC4:
 
 void func_80072BCC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -11026,10 +11018,8 @@ block_80072C64:
 
 void func_80072C6C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -11270,10 +11260,8 @@ block_80072C9C:
 
 void func_80072CA0(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -11412,10 +11400,8 @@ block_80072CB8:
 
 void func_80072CC8(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -11676,10 +11662,8 @@ block_80072D00:
 
 void func_80072D04(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -11826,10 +11810,8 @@ void func_80072D2C(CPUState* cpu)
 
 void func_80072D34(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -12156,10 +12138,8 @@ block_80072D44:
 
 void func_80072DBC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -12552,10 +12532,8 @@ block_80072E10:
 
 void func_80072E38(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80072E38u);
@@ -12596,10 +12574,8 @@ block_80072E38:
 
 void func_80072E4C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -13029,10 +13005,8 @@ block_80072EA8:
 
 void func_80072ED0(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80072ED0u);
@@ -13073,10 +13047,8 @@ block_80072ED0:
 
 void func_80072ED8(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80072ED8u);
@@ -13141,10 +13113,8 @@ block_80072ED8:
 
 void func_80072EEC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -13272,10 +13242,8 @@ block_80072F04:
 
 void func_80072F18(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80072F18u);
@@ -13330,10 +13298,8 @@ block_80072F18:
 
 void func_80072F2C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -13439,10 +13405,8 @@ block_80072F34:
 
 void func_80072F48(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -13962,10 +13926,8 @@ block_80072FB0:
 
 void func_80073004(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -14583,10 +14545,8 @@ block_800730D4:
 
 void func_800730EC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -15009,10 +14969,8 @@ block_80073160:
 
 void func_8007316C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x8007316Cu);
@@ -15063,10 +15021,8 @@ block_8007316C:
 
 void func_80073178(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073178u);
@@ -15107,10 +15063,8 @@ block_80073178:
 
 void func_8007318C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x8007318Cu);
@@ -15695,10 +15649,8 @@ block_8007318C:
 
 void func_8007329C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -16892,10 +16844,8 @@ block_800733D0:
 
 void func_800733FC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -17083,10 +17033,8 @@ block_80073424:
 
 void func_80073438(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073438u);
@@ -17338,10 +17286,8 @@ block_80073438:
 
 void func_8007349C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -17516,10 +17462,8 @@ block_800734C0:
 
 void func_800734D4(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x800734D4u);
@@ -17754,10 +17698,8 @@ block_800734D4:
 
 void func_8007353C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x8007353Cu);
@@ -18379,10 +18321,8 @@ block_8007353C:
 
 void func_8007366C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x8007366Cu);
@@ -18967,10 +18907,8 @@ block_8007366C:
 
 void func_8007377C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x8007377Cu);
@@ -19177,10 +19115,8 @@ block_8007377C:
 
 void func_800737CC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x800737CCu);
@@ -19411,10 +19347,8 @@ block_800737CC:
 
 void func_8007382C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x8007382Cu);
@@ -19501,10 +19435,8 @@ block_8007382C:
 
 void func_8007385C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x8007385Cu);
@@ -20126,10 +20058,8 @@ block_8007385C:
 
 void func_8007398C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x8007398Cu);
@@ -20254,10 +20184,8 @@ block_8007398C:
 
 void func_800739BC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x800739BCu);
@@ -20382,10 +20310,8 @@ block_800739BC:
 
 void func_800739EC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x800739ECu);
@@ -20510,10 +20436,8 @@ block_800739EC:
 
 void func_80073A1C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073A1Cu);
@@ -20605,10 +20529,8 @@ block_80073A1C:
 
 void func_80073A3C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073A3Cu);
@@ -20674,10 +20596,8 @@ block_80073A3C:
 
 void func_80073A4C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073A4Cu);
@@ -20743,10 +20663,8 @@ block_80073A4C:
 
 void func_80073A5C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073A5Cu);
@@ -20812,10 +20730,8 @@ block_80073A5C:
 
 void func_80073A6C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073A6Cu);
@@ -20928,10 +20844,8 @@ block_80073A6C:
 
 void func_80073A8C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073A8Cu);
@@ -21008,10 +20922,8 @@ block_80073A8C:
 
 void func_80073AA0(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073AA0u);
@@ -21088,10 +21000,8 @@ block_80073AA0:
 
 void func_80073AB4(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073AB4u);
@@ -21143,10 +21053,8 @@ block_80073AB4:
 
 void func_80073AC0(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073AC0u);
@@ -21223,10 +21131,8 @@ block_80073AC0:
 
 void func_80073AD4(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073AD4u);
@@ -21314,10 +21220,8 @@ block_80073AD4:
 
 void func_80073AEC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073AECu);
@@ -21394,10 +21298,8 @@ block_80073AEC:
 
 void func_80073B00(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073B00u);
@@ -21474,10 +21376,8 @@ block_80073B00:
 
 void func_80073B14(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073B14u);
@@ -21554,10 +21454,8 @@ block_80073B14:
 
 void func_80073B28(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073B28u);
@@ -21612,10 +21510,8 @@ block_80073B28:
 
 void func_80073B34(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073B34u);
@@ -21667,10 +21563,8 @@ block_80073B34:
 
 void func_80073B40(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073B40u);
@@ -21722,10 +21616,8 @@ block_80073B40:
 
 void func_80073B4C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073B4Cu);
@@ -21822,10 +21714,8 @@ block_80073B4C:
 
 void func_80073B6C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073B6Cu);
@@ -21926,10 +21816,8 @@ block_80073B6C:
 
 void func_80073B8C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073B8Cu);
@@ -22030,10 +21918,8 @@ block_80073B8C:
 
 void func_80073BAC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073BACu);
@@ -22116,10 +22002,8 @@ block_80073BAC:
 
 void func_80073BCC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073BCCu);
@@ -22174,10 +22058,8 @@ block_80073BCC:
 
 void func_80073BDC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073BDCu);
@@ -22314,10 +22196,8 @@ block_80073BDC:
 
 void func_80073C0C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073C0Cu);
@@ -22447,10 +22327,8 @@ block_80073C0C:
 
 void func_80073C3C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x80073C3Cu);
@@ -22605,10 +22483,8 @@ block_80073C3C:
 
 void func_80073C8C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -24205,10 +24081,8 @@ block_80073DEC:
 
 void func_80073F1C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -25805,10 +25679,8 @@ block_8007407C:
 
 void func_800741AC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -26760,10 +26632,8 @@ block_80074210:
 
 void func_8007434C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -27718,10 +27588,8 @@ block_800743B0:
 
 void func_800744EC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -28673,10 +28541,8 @@ block_80074550:
 
 void func_8007468C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -30292,10 +30158,8 @@ block_80074804:
 
 void func_8007480C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -30631,10 +30495,8 @@ block_80074860:
 
 void func_800748AC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -30732,10 +30594,8 @@ block_800748B8:
 
 void func_800748C4(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -30826,10 +30686,8 @@ block_800748D0:
 
 void func_800748DC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -30909,10 +30767,8 @@ block_800748E8:
 
 void func_800748EC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -30992,10 +30848,8 @@ block_800748F8:
 
 void func_800748FC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -31075,10 +30929,8 @@ block_80074908:
 
 void func_8007490C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -31158,10 +31010,8 @@ block_80074918:
 
 void func_8007491C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -31241,10 +31091,8 @@ block_80074928:
 
 void func_8007492C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -31324,10 +31172,8 @@ block_80074938:
 
 void func_8007493C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -31407,10 +31253,8 @@ block_80074948:
 
 void func_8007494C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -31490,10 +31334,8 @@ block_80074958:
 
 void func_8007495C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -31573,10 +31415,8 @@ block_80074968:
 
 void func_8007496C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -31656,10 +31496,8 @@ block_80074978:
 
 void func_8007497C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -31739,10 +31577,8 @@ block_80074988:
 
 void func_8007498C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -31822,10 +31658,8 @@ block_80074998:
 
 void func_8007499C(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -31905,10 +31739,8 @@ block_800749A8:
 
 void func_800749AC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -31988,10 +31820,8 @@ block_800749B8:
 
 void func_800749BC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -32071,10 +31901,8 @@ block_800749C8:
 
 void func_800749CC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -32154,10 +31982,8 @@ block_800749D8:
 
 void func_800749DC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {
@@ -32237,10 +32063,8 @@ block_800749E8:
 
 void func_800749EC(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x800749ECu);
@@ -32290,10 +32114,8 @@ block_800749EC:
 
 void func_800749F8(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     if (cpu->pc != 0u) {

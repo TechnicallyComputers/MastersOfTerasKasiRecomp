@@ -3,10 +3,8 @@
 
 void func_8007BA70(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x8007BA70u);
@@ -13576,10 +13574,8 @@ block_8007BA70:
 
 void func_8007BA78(CPUState* cpu)
 {
-#ifdef PSX_ENABLE_BLOCK_CYCLES
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(PSX_ENABLE_BLOCK_CYCLES) && (defined(__GNUC__) || defined(__clang__))
     __attribute__((cleanup(psx_cyc_bb_defer_cleanup))) int _psx_cyc_bb_guard = 1;
-#endif
     psx_cyc_bb_defer_begin();
 #endif
     debug_server_log_call_entry(0x8007BA78u);

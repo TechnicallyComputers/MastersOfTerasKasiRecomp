@@ -22,6 +22,8 @@ extern int  psx_ws_cull_slti(uint32_t sx, uint32_t imm);   /* ws cull signed rig
 extern int  psx_ws_cull_bltz(uint32_t v);                  /* ws cull signed left edge (gpu.c) */
 extern int  psx_ws_cull_vxrange(uint32_t x, uint32_t imm); /* ws masked-u16 X window */
 extern int32_t psx_ws_depth_bound(int32_t imm);            /* ws aspect-scaled far bound */
+extern int32_t psx_ws_plane_nx(int32_t nx);                /* ws side-plane normal-X scale (gpu.c) */
+extern uint32_t psx_ws_xclip_bound(uint32_t vanilla);      /* ws per-prim X reject bound load (gpu.c) */
 extern int  psx_ws_backdrop_x(int x);  /* widescreen backdrop screenX squash (gpu.c) */
 extern int  psx_ws_bg2d_cols(int base);                    /* ws 2D bg tile-loop widen: col count (gpu.c) */
 extern int  psx_ws_bg2d_startcol(int col, unsigned mask);  /* ws 2D bg tile-loop widen: start tile col (gpu.c) */

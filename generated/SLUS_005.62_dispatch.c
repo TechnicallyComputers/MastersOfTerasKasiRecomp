@@ -3,7 +3,7 @@
 
 extern void psx_check_interrupts_dispatch_entry(CPUState* cpu, uint32_t resume_pc);
 
-extern int dirty_ram_text_native_ok_ranges(const uint32_t* lo_len_pairs, uint32_t count, uint32_t exec_pc);
+extern int dirty_ram_text_native_ok_ranges_from(const uint32_t* lo_len_pairs, uint32_t count, uint32_t exec_pc);
 
 /* Forward declarations for all recompiled functions */
 extern void func_80010000(CPUState* cpu);
@@ -45746,7 +45746,7 @@ static const PsxGameDispatchEntry* psx_game_find_entry(uint32_t addr) {
 int psx_game_text_native_ok(uint32_t addr) {
     const PsxGameDispatchEntry* entry = psx_game_find_entry(addr);
     if (!entry || entry->range_count == 0) return 0;
-    return dirty_ram_text_native_ok_ranges(
+    return dirty_ram_text_native_ok_ranges_from(
         &k_psx_game_code_ranges[entry->range_index].lo, entry->range_count, addr);
 }
 
@@ -45754,7 +45754,7 @@ int psx_game_text_native_ok(uint32_t addr) {
 int psx_dispatch_game_compiled(CPUState* cpu, uint32_t addr) {
     const PsxGameDispatchEntry* entry = psx_game_find_entry(addr);
     if (!entry) return 0;
-    if (entry->range_count == 0 || !dirty_ram_text_native_ok_ranges(
+    if (entry->range_count == 0 || !dirty_ram_text_native_ok_ranges_from(
             &k_psx_game_code_ranges[entry->range_index].lo, entry->range_count, addr)) return 0;
     psx_check_interrupts_dispatch_entry(cpu, addr);
     cpu->pc = entry->resume_pc;
