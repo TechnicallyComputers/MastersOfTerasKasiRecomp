@@ -169,7 +169,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            build-essential cmake ninja-build pkg-config libsdl2-dev zip
+            build-essential cmake ninja-build pkg-config \
+            libsdl2-dev libgl1-mesa-dev zip
 
       - name: Install deps (macOS)
         if: runner.os == 'macOS'
@@ -187,9 +188,12 @@ jobs:
           if [[ -n "${CMAKE_OSX_DEPLOYMENT_TARGET:-}" ]]; then
             EXTRA+=("-DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}")
           fi
+          # RNET_ENABLE_ICE=ON: online (non-LAN) lobbies need libjuice; FetchContent
+          # clones it when missing (needs network on the runner).
           cmake -S . -B build-ci -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DMOTK_NATIVE=OFF \
+            -DRNET_ENABLE_ICE=ON \
             -DPSX_GAME_VERSION="${VERSION}" \
             "${EXTRA[@]}"
           cmake --build build-ci --target psx-runtime -j"$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
