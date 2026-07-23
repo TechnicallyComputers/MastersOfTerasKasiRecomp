@@ -59,13 +59,14 @@ cp -a "${EXE}" "${STAGE}/"
 
 # recomp-ui POST_BUILD stages a flat assets/fonts + assets/img next to the exe.
 # (Repo source layout is assets/common|consoles/ — do not pack that.)
-if [[ ! -d "${BUILD_DIR}/assets/fonts" || ! -d "${BUILD_DIR}/assets/img" ]]; then
-  echo "error: ${BUILD_DIR}/assets/{fonts,img} missing — rebuild psx-runtime" >&2
+EXE_DIR="$(dirname "${EXE}")"
+if [[ ! -d "${EXE_DIR}/assets/fonts" || ! -d "${EXE_DIR}/assets/img" ]]; then
+  echo "error: ${EXE_DIR}/assets/{fonts,img} missing — rebuild psx-runtime" >&2
   exit 1
 fi
 mkdir -p "${STAGE}/assets"
-cp -a "${BUILD_DIR}/assets/fonts" "${STAGE}/assets/"
-cp -a "${BUILD_DIR}/assets/img" "${STAGE}/assets/"
+cp -a "${EXE_DIR}/assets/fonts" "${STAGE}/assets/"
+cp -a "${EXE_DIR}/assets/img" "${STAGE}/assets/"
 
 if [[ ! -f "${STAGE}/assets/fonts/LatoLatin-Regular.ttf" ]]; then
   echo "error: assets/fonts incomplete (missing LatoLatin-Regular.ttf)" >&2
