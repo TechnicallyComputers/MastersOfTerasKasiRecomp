@@ -9,10 +9,9 @@
 #       - SCPH1001.BIN + motk/*.cue|*.bin (Git LFS) for per-OS intro PGO train
 #     Players still pick BIOS + disc at first launch; neither is in the zip.
 #
-# Framework deps (not MotK gitlink pins):
-#   - mstan/psxrecomp@master
-#   - MotK-root recomp-ui@master
-#   - nested recomp-net@main (engine transport; float past upstream pin)
+# Framework deps use this repository's exact gitlink pins:
+#   - psxrecomp at the game root (which owns its recomp-net pin)
+#   - recomp-ui at the game root
 #
 # All matrix packages are PGO-trained on the MotK intro (instrument → train →
 # use) on that runner's toolchain (GCC .gcda on Linux/Windows; Clang
@@ -75,28 +74,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # MotK gitlink pins are ignored — next step takes upstream master.
-          submodules: false
+          submodules: recursive
           fetch-depth: 1
 
-      - name: Checkout recomp-ui (game root) + psxrecomp upstream
+      - name: Record pinned framework revisions
         shell: bash
         run: |
           set -euo pipefail
-          # Game-owned UI pin at repo root.
-          git submodule update --init --depth=1 recomp-ui
-          git -C recomp-ui fetch --depth=1 origin master
-          git -C recomp-ui checkout -f FETCH_HEAD
-
-          rm -rf psxrecomp
-          git clone --depth=1 --branch master \
-            https://github.com/mstan/psxrecomp.git psxrecomp
-          git -C psxrecomp submodule sync
-          # Engine keeps recomp-net only — not recomp-ui.
-          git -C psxrecomp submodule update --init --depth=1 lib/recomp-net
-          git -C psxrecomp/lib/recomp-net fetch --depth=1 origin main
-          git -C psxrecomp/lib/recomp-net checkout -f FETCH_HEAD
-
           echo "psxrecomp=$(git -C psxrecomp rev-parse --short HEAD) ($(git -C psxrecomp rev-parse HEAD))"
           echo "recomp-ui=$(git -C recomp-ui rev-parse --short HEAD)"
           echo "recomp-net=$(git -C psxrecomp/lib/recomp-net rev-parse --short HEAD)"
