@@ -13,7 +13,8 @@ Holds game config, seeds, build glue, and (for private CI) recompiler
 | `game.toml` | Game / recompiler / runtime config |
 | `seeds/` | Function-start seeds for `psxrecomp-game` |
 | `motk/` | Local disc `.bin`/`.cue`, `SLUS_005.62`, `SYSTEM.CNF` (gitignored) |
-| `psxrecomp/` | Framework submodule (`TechnicallyComputers/psxrecomp`) |
+| `psxrecomp/` | Framework submodule (`mstan/psxrecomp`; keeps `lib/recomp-net`) |
+| `recomp-ui/` | Launcher UI submodule (`mstan/recomp-ui`) at game root |
 | `generated/` | Recompiler output (tracked for CI; regenerate when seeds change) |
 | `VERSION` | Release / lobby match pin (e.g. `0.1.0`) |
 | `DISC.md` | Disc identity + hashes |
@@ -86,8 +87,8 @@ GitHub Actions workflow: `.github/workflows/release.yml`
 - Tag `v0.1.0` (matching `VERSION`): builds + GitHub Release with zips
 - Packages include the exe, `assets/` (recomp-ui fonts/img), `game.toml`, and
   `VERSION` — never BIOS/disc
-- CI pulls **mstan/psxrecomp@master**, then floats nested **recomp-ui@master**
-  and **recomp-net@main** (ignores MotK gitlink pins for the framework)
+- CI pulls **mstan/psxrecomp@master** + MotK-root **recomp-ui@master**, and
+  floats engine **recomp-net@main**
 - CI configures `-DRNET_ENABLE_ICE=ON` (online lobbies) and `-DMOTK_NATIVE=OFF`
 - Local pack: `scripts/package_release.sh build-release linux-x64`
 

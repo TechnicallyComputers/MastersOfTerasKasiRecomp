@@ -1,0 +1,47 @@
+--- a/runtime/runtime.cmake	2026-07-23 00:26:08.407403470 -0400
++++ b/runtime/runtime.cmake	2026-07-23 00:25:26.298584996 -0400
+@@ -95,8 +95,18 @@
+     option(PSX_STATIC_RUNTIME "Statically link SDL2 + libgcc/libstdc++ for a self-contained exe" OFF)
+ endif()
+ 
+-# PSX_RECOMP_UI: build the shared Dear ImGui launcher from lib/recomp-ui.
++# PSX_RECOMP_UI: wire the shared Dear ImGui launcher from the *game* repo's
++# root recomp-ui submodule (CMAKE_SOURCE_DIR/recomp-ui). Not vendored in
++# psxrecomp — games that need the launcher own the pin.
+ option(PSX_RECOMP_UI "Build the shared recomp-ui Dear ImGui launcher" ON)
++set(RECOMP_UI_ROOT "" CACHE PATH
++    "Path to recomp-ui; empty = <game>/recomp-ui")
++if(PSX_RECOMP_UI AND (NOT RECOMP_UI_ROOT OR RECOMP_UI_ROOT STREQUAL ""))
++    if(EXISTS "${CMAKE_SOURCE_DIR}/recomp-ui/recomp_ui.cmake")
++        set(RECOMP_UI_ROOT "${CMAKE_SOURCE_DIR}/recomp-ui" CACHE PATH
++            "Path to recomp-ui; empty = <game>/recomp-ui" FORCE)
++    endif()
++endif()
+ 
+ set(PSXRECOMP_RUNTIME_SOURCES
+     ${PSXRECOMP_ROOT}/runtime/src/main.cpp
+@@ -533,15 +543,18 @@
+     endif()
+ 
+     # Shared recomp-ui Dear ImGui launcher (not in the oracle build — that's headless).
++    # Lives at the game repo root (RECOMP_UI_ROOT / CMAKE_SOURCE_DIR/recomp-ui),
++    # not under psxrecomp/lib/.
+     if(PSX_RECOMP_UI AND NOT PSXRT_ORACLE)
+-        if(NOT EXISTS "${PSXRECOMP_ROOT}/lib/recomp-ui/recomp_ui.cmake")
++        if(NOT RECOMP_UI_ROOT OR NOT EXISTS "${RECOMP_UI_ROOT}/recomp_ui.cmake")
+             message(FATAL_ERROR
+-                "PSX_RECOMP_UI=ON but lib/recomp-ui is missing. "
+-                "Run: git submodule update --init --recursive")
++                "PSX_RECOMP_UI=ON but recomp-ui is missing.\n"
++                "Add at the game repo root:\n"
++                "  git submodule add -b master "
++                "https://github.com/mstan/recomp-ui.git recomp-ui\n"
++                "Or set -DRECOMP_UI_ROOT=/path/to/recomp-ui")
+         endif()
+-        set(RECOMP_UI_ROOT "${PSXRECOMP_ROOT}/lib/recomp-ui" CACHE PATH
+-            "Root directory of recomp-ui" FORCE)
+-        include("${PSXRECOMP_ROOT}/lib/recomp-ui/recomp_ui.cmake")
++        include("${RECOMP_UI_ROOT}/recomp_ui.cmake")
+ 
+         set(_psx_recomp_ui_args)
+         if(PSXRT_LAUNCHER_BOXART)
