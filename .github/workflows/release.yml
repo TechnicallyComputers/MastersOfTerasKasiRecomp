@@ -84,6 +84,9 @@ jobs:
           git -C psxrecomp/lib/recomp-ui checkout -f FETCH_HEAD
           git -C psxrecomp/lib/recomp-net fetch --depth=1 origin main
           git -C psxrecomp/lib/recomp-net checkout -f FETCH_HEAD
+          # recomp-ui master expects create(..., char* endpoint, ..., int lan_only).
+          # Upstream psxrecomp master still has the old signature — bridge until merged.
+          git -C psxrecomp apply ../patches/psxrecomp-ae_np_create-abi.patch
           echo "psxrecomp=$(git -C psxrecomp rev-parse --short HEAD) ($(git -C psxrecomp rev-parse HEAD))"
           echo "recomp-ui=$(git -C psxrecomp/lib/recomp-ui rev-parse --short HEAD)"
           echo "recomp-net=$(git -C psxrecomp/lib/recomp-net rev-parse --short HEAD)"

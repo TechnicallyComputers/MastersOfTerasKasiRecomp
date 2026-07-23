@@ -1,0 +1,55 @@
+diff --git a/runtime/src/main.cpp b/runtime/src/main.cpp
+index 2aef1fa..c65d284 100644
+--- a/runtime/src/main.cpp
++++ b/runtime/src/main.cpp
+@@ -4048,12 +4048,37 @@ namespace {
+ #endif
+     }
+ 
+-    int ae_np_create(void*, const char* lobby_name, const char* host_port,
++    /* host_endpoint is in/out (capacity >= 64). recomp-ui applies UDP port
++     * policy before calling. lan_only: local registry only; else lobby server. */
++    int ae_np_create(void*, const char* lobby_name, char* host_endpoint,
+                      const char* password,
+-                     const RecompLauncherCSettings* settings) {
++                     const RecompLauncherCSettings* settings,
++                     int lan_only) {
+         PsxLobbyMatchCaps caps = ae_netplay_caps_from_settings(settings);
+-        const char* endpoint = host_port && host_port[0] ? host_port : "0.0.0.0:7777";
+-        ae_np_write_lan_lobby(lobby_name, endpoint, password);
++        char endpoint[96];
++        if (host_endpoint && host_endpoint[0])
++            std::snprintf(endpoint, sizeof(endpoint), "%s", host_endpoint);
++        else
++            std::snprintf(endpoint, sizeof(endpoint), "0.0.0.0:7777");
++
++        if (lan_only) {
++            if (psx_lobby_in_lobby())
++                (void)psx_lobby_leave();
++            ae_np_write_lan_lobby(lobby_name, endpoint, password);
++            if (host_endpoint)
++                std::snprintf(host_endpoint, 96, "%s", endpoint);
++            return 0;
++        }
++
++        if (g_lnch_hosting_lan) {
++            std::error_code ec;
++            std::filesystem::remove(ae_np_lan_file(), ec);
++            g_lnch_hosting_lan = false;
++        }
++        g_lnch_joined_lan = false;
++        g_lnch_lan_endpoint.clear();
++        if (host_endpoint)
++            std::snprintf(host_endpoint, 96, "%s", endpoint);
+         return psx_lobby_create(lobby_name && lobby_name[0] ? lobby_name : "Netplay Lobby",
+                                 g_lnch_netplay_game_name.c_str(), PSX_GAME_VERSION,
+                                 password ? password : "", endpoint, &caps);
+@@ -4237,6 +4262,8 @@ namespace {
+         ae_np_launch_pending,
+         ae_np_clear_launch_pending,
+         ae_np_fill_launch,
++        nullptr, /* local_address_get — optional; local_ip fallback */
++        nullptr, /* kick_member — optional */
+     };
+ }  // namespace
+ #endif
