@@ -325,14 +325,27 @@ jobs:
               >"/tmp/motk_pgo_train_${run}.log" 2>&1 &
             MPID=$!
             sleep "${PGO_TRAIN_SECS}"
-            kill "${MPID}" 2>/dev/null || true
+            # Soft-stop: runtime maps SIGTERM/SIGINT → exit(0) so gcov
+            # atexit flushes .gcda. Bare kill without that leaves 0 profiles.
+            if kill -0 "${MPID}" 2>/dev/null; then
+              kill -TERM "${MPID}" 2>/dev/null || true
+              for _ in $(seq 1 30); do
+                kill -0 "${MPID}" 2>/dev/null || break
+                sleep 1
+              done
+              if kill -0 "${MPID}" 2>/dev/null; then
+                echo "::warning::PGO train pid ${MPID} still alive after TERM; sending KILL"
+                kill -KILL "${MPID}" 2>/dev/null || true
+              fi
+            fi
             wait "${MPID}" 2>/dev/null || true
             tail -20 "/tmp/motk_pgo_train_${run}.log" || true
           done
-          N_GCDA="$(find build-ci/pgo -name '*.gcda' 2>/dev/null | wc -l)"
-          echo "PGO profiles: ${N_GCDA} .gcda under build-ci/pgo"
+          N_GCDA="$(find build-ci -name '*.gcda' 2>/dev/null | wc -l)"
+          echo "PGO profiles: ${N_GCDA} .gcda under build-ci"
           if [[ "${N_GCDA}" -lt 1 ]]; then
-            echo "::error::no PGO profiles written — train did not run guest code"
+            echo "::error::no PGO profiles written — train did not flush .gcda (soft-exit/gcov)"
+            find build-ci -name '*.gcno' 2>/dev/null | head -20 || true
             exit 1
           fi
 
