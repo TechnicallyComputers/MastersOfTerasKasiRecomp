@@ -84,7 +84,9 @@ GitHub Actions workflow: `.github/workflows/release.yml`
 
 - Manual: **Actions → Release builds → Run workflow**
 - Tag `v0.1.0` (matching `VERSION`): builds + GitHub Release with zips
-- Packages include the exe, launcher assets, `game.toml`, and `VERSION` — never BIOS/disc
+- Packages include the exe, `assets/` (recomp-ui fonts/img), `game.toml`, and
+  `VERSION` — never BIOS/disc
+- CI configures `-DRNET_ENABLE_ICE=ON` (online lobbies) and `-DMOTK_NATIVE=OFF`
 - Local pack: `scripts/package_release.sh build-release linux-x64`
 
 Clone with submodules:

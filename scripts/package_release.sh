@@ -57,21 +57,28 @@ fi
 
 cp -a "${EXE}" "${STAGE}/"
 
-# Launcher assets are copied next to the exe by runtime.cmake POST_BUILD
-# (fonts/, img/, launcher.rml) — same layout players must run from.
-copy_assets() {
-  local src="$1"
-  [[ -d "${src}/fonts" ]] && cp -a "${src}/fonts" "${STAGE}/"
-  [[ -d "${src}/img" ]] && cp -a "${src}/img" "${STAGE}/"
-  [[ -f "${src}/launcher.rml" ]] && cp -a "${src}/launcher.rml" "${STAGE}/"
-}
-copy_assets "${BUILD_DIR}"
-if [[ ! -f "${STAGE}/launcher.rml" ]]; then
-  copy_assets "${ROOT}/psxrecomp/runtime/launcher/assets"
-fi
-if [[ ! -f "${STAGE}/launcher.rml" ]]; then
-  echo "error: launcher.rml not found (build POST_BUILD assets or assets/)" >&2
+# recomp-ui POST_BUILD stages a flat assets/fonts + assets/img next to the exe.
+# (Repo source layout is assets/common|consoles/ — do not pack that.)
+if [[ ! -d "${BUILD_DIR}/assets/fonts" || ! -d "${BUILD_DIR}/assets/img" ]]; then
+  echo "error: ${BUILD_DIR}/assets/{fonts,img} missing — rebuild psx-runtime" >&2
   exit 1
+fi
+mkdir -p "${STAGE}/assets"
+cp -a "${BUILD_DIR}/assets/fonts" "${STAGE}/assets/"
+cp -a "${BUILD_DIR}/assets/img" "${STAGE}/assets/"
+
+if [[ ! -f "${STAGE}/assets/fonts/LatoLatin-Regular.ttf" ]]; then
+  echo "error: assets/fonts incomplete (missing LatoLatin-Regular.ttf)" >&2
+  exit 1
+fi
+if [[ ! -f "${STAGE}/assets/img/boxart.tga" ]]; then
+  # MotK boxart is a POST_BUILD overlay; allow packing from the repo tree.
+  if [[ -f "${ROOT}/launcher_assets/img/boxart.tga" ]]; then
+    cp -a "${ROOT}/launcher_assets/img/boxart.tga" "${STAGE}/assets/img/boxart.tga"
+  else
+    echo "error: assets/img/boxart.tga missing (build POST_BUILD or launcher_assets/)" >&2
+    exit 1
+  fi
 fi
 
 cp -a "${ROOT}/game.toml" "${STAGE}/"
