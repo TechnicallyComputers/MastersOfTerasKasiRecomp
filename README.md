@@ -86,6 +86,8 @@ GitHub Actions workflow: `.github/workflows/release.yml`
 - Tag `v0.1.0` (matching `VERSION`): builds + GitHub Release with zips
 - Packages include the exe, `assets/` (recomp-ui fonts/img), `game.toml`, and
   `VERSION` — never BIOS/disc
+- CI pulls **mstan/psxrecomp@master**, then floats nested **recomp-ui@master**
+  and **recomp-net@main** (ignores MotK gitlink pins for the framework)
 - CI configures `-DRNET_ENABLE_ICE=ON` (online lobbies) and `-DMOTK_NATIVE=OFF`
 - Local pack: `scripts/package_release.sh build-release linux-x64`
 
