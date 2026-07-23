@@ -1,8 +1,149 @@
 diff --git a/runtime/src/main.cpp b/runtime/src/main.cpp
-index 2aef1fa..c65d284 100644
+index 2aef1fa..dbe6c8b 100644
 --- a/runtime/src/main.cpp
 +++ b/runtime/src/main.cpp
-@@ -4048,12 +4048,37 @@ namespace {
+@@ -87,8 +87,17 @@ extern "C" void psx_event_step_conservative_env_init(void);
+ #endif
+ #include <winsock2.h>
+ #include <ws2tcpip.h>
++#include <iphlpapi.h>
+ #include <windows.h>
+ #include <commdlg.h>
++#else
++#include <arpa/inet.h>
++#include <ifaddrs.h>
++#include <net/if.h>
++#include <netinet/in.h>
++#include <sys/socket.h>
++#include <sys/types.h>
++#include <unistd.h>
+ #endif
+ 
+ #ifndef PSX_DEFAULT_BIOS_PATH
+@@ -3963,39 +3972,98 @@ namespace {
+         return 1;
+     }
+ 
+-    int ae_np_local_ip(void*, char* out, size_t out_len) {
+-        if (!out || out_len == 0) return 0;
++    /* Collect non-loopback IPv4 addresses for Host Lobby IP dropdown. */
++    static void ae_np_collect_local_addresses(
++        std::vector<RecompLauncherCNetplayLocalAddress>* out) {
++        if (!out) return;
++        out->clear();
++        auto push = [&](const char* ip, const char* label) {
++            if (!ip || !ip[0]) return;
++            if (std::strcmp(ip, "0.0.0.0") == 0 ||
++                std::strcmp(ip, "127.0.0.1") == 0)
++                return;
++            for (const auto& existing : *out) {
++                if (std::strcmp(existing.address, ip) == 0) return;
++            }
++            RecompLauncherCNetplayLocalAddress entry{};
++            std::snprintf(entry.address, sizeof(entry.address), "%s", ip);
++            if (label && label[0])
++                std::snprintf(entry.label, sizeof(entry.label), "%s", label);
++            out->push_back(entry);
++        };
+ #ifdef _WIN32
+         WSADATA wsa;
+         WSAStartup(MAKEWORD(2, 2), &wsa);
+-        SOCKET s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+-        if (s == INVALID_SOCKET) return 0;
+-        sockaddr_in dst{};
+-        dst.sin_family = AF_INET;
+-        dst.sin_port = htons(80);
+-        inet_pton(AF_INET, "8.8.8.8", &dst.sin_addr);
+-        if (connect(s, (sockaddr*)&dst, sizeof(dst)) == SOCKET_ERROR) {
+-            closesocket(s);
+-            return 0;
++        ULONG flags = GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST |
++                      GAA_FLAG_SKIP_DNS_SERVER;
++        ULONG buf_len = 16 * 1024;
++        std::vector<unsigned char> buf(buf_len);
++        IP_ADAPTER_ADDRESSES* addrs =
++            reinterpret_cast<IP_ADAPTER_ADDRESSES*>(buf.data());
++        ULONG rc = GetAdaptersAddresses(AF_INET, flags, nullptr, addrs, &buf_len);
++        if (rc == ERROR_BUFFER_OVERFLOW) {
++            buf.resize(buf_len);
++            addrs = reinterpret_cast<IP_ADAPTER_ADDRESSES*>(buf.data());
++            rc = GetAdaptersAddresses(AF_INET, flags, nullptr, addrs, &buf_len);
+         }
+-        sockaddr_in local{};
+-        int len = sizeof(local);
+-        if (getsockname(s, (sockaddr*)&local, &len) == SOCKET_ERROR) {
+-            closesocket(s);
+-            return 0;
++        if (rc != NO_ERROR) return;
++        for (IP_ADAPTER_ADDRESSES* a = addrs; a; a = a->Next) {
++            if (a->OperStatus != IfOperStatusUp) continue;
++            if (a->IfType == IF_TYPE_SOFTWARE_LOOPBACK) continue;
++            char label[64] = {};
++            if (a->FriendlyName) {
++                WideCharToMultiByte(CP_UTF8, 0, a->FriendlyName, -1, label,
++                                    (int)sizeof(label), nullptr, nullptr);
++            }
++            for (IP_ADAPTER_UNICAST_ADDRESS* u = a->FirstUnicastAddress; u;
++                 u = u->Next) {
++                if (!u->Address.lpSockaddr ||
++                    u->Address.lpSockaddr->sa_family != AF_INET)
++                    continue;
++                auto* sin = reinterpret_cast<sockaddr_in*>(u->Address.lpSockaddr);
++                char ip[64] = {};
++                if (!inet_ntop(AF_INET, &sin->sin_addr, ip, sizeof(ip))) continue;
++                push(ip, label);
++            }
+         }
+-        char buf[64] = {};
+-        const char* ip = inet_ntop(AF_INET, &local.sin_addr, buf, sizeof(buf));
+-        closesocket(s);
+-        if (!ip || !buf[0]) return 0;
+-        std::snprintf(out, out_len, "%s", buf);
+-        return 1;
+ #else
+-        std::snprintf(out, out_len, "Unavailable");
+-        return 0;
++        struct ifaddrs* ifa = nullptr;
++        if (getifaddrs(&ifa) != 0 || !ifa) return;
++        for (struct ifaddrs* i = ifa; i; i = i->ifa_next) {
++            if (!i->ifa_addr || i->ifa_addr->sa_family != AF_INET) continue;
++            if (!(i->ifa_flags & IFF_UP) || (i->ifa_flags & IFF_LOOPBACK)) continue;
++            auto* sin = reinterpret_cast<sockaddr_in*>(i->ifa_addr);
++            char ip[64] = {};
++            if (!inet_ntop(AF_INET, &sin->sin_addr, ip, sizeof(ip))) continue;
++            push(ip, i->ifa_name ? i->ifa_name : "");
++        }
++        freeifaddrs(ifa);
+ #endif
+     }
+ 
++    int ae_np_local_address_get(void*, int index,
++                                RecompLauncherCNetplayLocalAddress* out) {
++        if (!out || index < 0) return 0;
++        std::memset(out, 0, sizeof(*out));
++        std::vector<RecompLauncherCNetplayLocalAddress> addrs;
++        ae_np_collect_local_addresses(&addrs);
++        if (index >= (int)addrs.size()) return 0;
++        *out = addrs[(size_t)index];
++        return out->address[0] ? 1 : 0;
++    }
++
++    int ae_np_local_ip(void*, char* out, size_t out_len) {
++        if (!out || out_len == 0) return 0;
++        std::vector<RecompLauncherCNetplayLocalAddress> addrs;
++        ae_np_collect_local_addresses(&addrs);
++        if (addrs.empty()) {
++            std::snprintf(out, out_len, "Unavailable");
++            return 0;
++        }
++        std::snprintf(out, out_len, "%s", addrs[0].address);
++        return 1;
++    }
++
+     int ae_np_external_ip(void*, char* out, size_t out_len) {
+         if (!out || out_len == 0) return 0;
+ #ifdef _WIN32
+@@ -4048,12 +4116,37 @@ namespace {
  #endif
      }
  
@@ -44,11 +185,11 @@ index 2aef1fa..c65d284 100644
          return psx_lobby_create(lobby_name && lobby_name[0] ? lobby_name : "Netplay Lobby",
                                  g_lnch_netplay_game_name.c_str(), PSX_GAME_VERSION,
                                  password ? password : "", endpoint, &caps);
-@@ -4237,6 +4262,8 @@ namespace {
+@@ -4237,6 +4330,8 @@ namespace {
          ae_np_launch_pending,
          ae_np_clear_launch_pending,
          ae_np_fill_launch,
-+        nullptr, /* local_address_get — optional; local_ip fallback */
++        ae_np_local_address_get,
 +        nullptr, /* kick_member — optional */
      };
  }  // namespace
