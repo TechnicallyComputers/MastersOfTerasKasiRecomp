@@ -27,12 +27,20 @@ for run in $(seq 1 "$TRAIN_RUNS"); do
     >/tmp/motk_pgo_train_${run}.log 2>&1 &
   MPID=$!
   sleep "$TRAIN_SECS"
-  kill "$MPID" 2>/dev/null || true
+  # Soft-stop so atexit/__gcov_exit flushes .gcda (default SIGTERM does not).
+  if kill -0 "$MPID" 2>/dev/null; then
+    kill -TERM "$MPID" 2>/dev/null || true
+    for _ in $(seq 1 30); do
+      kill -0 "$MPID" 2>/dev/null || break
+      sleep 1
+    done
+    kill -KILL "$MPID" 2>/dev/null || true
+  fi
   wait "$MPID" 2>/dev/null || true
 done
 
-n_gcda=$(find "$BUILD/pgo" -name '*.gcda' 2>/dev/null | wc -l)
-echo "PGO profiles: $n_gcda .gcda under $BUILD/pgo"
+n_gcda=$(find "$BUILD" -name '*.gcda' 2>/dev/null | wc -l)
+echo "PGO profiles: $n_gcda .gcda under $BUILD"
 if [[ "$n_gcda" -lt 1 ]]; then
   echo "ERROR: no profiles written" >&2
   exit 1
