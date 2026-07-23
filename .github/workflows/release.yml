@@ -9,7 +9,7 @@
 #     Players still pick SCPH1001.BIN + disc at first launch; neither is in the zip.
 #
 # Framework deps (not MotK gitlink pins):
-#   - mstan/psxrecomp@master (+ MotK patches for create ABI / game-root UI)
+#   - mstan/psxrecomp@master (game-root UI + create ABI already upstream)
 #   - MotK-root recomp-ui@master
 #   - nested recomp-net@main (engine transport; float past upstream pin)
 #
@@ -88,9 +88,6 @@ jobs:
           git -C psxrecomp/lib/recomp-net fetch --depth=1 origin main
           git -C psxrecomp/lib/recomp-net checkout -f FETCH_HEAD
 
-          # Bridge patches until upstream absorbs game-root UI + create ABI.
-          git -C psxrecomp apply ../patches/psxrecomp-recomp-ui-game-root.patch
-          git -C psxrecomp apply ../patches/psxrecomp-ae_np_create-abi.patch
           echo "psxrecomp=$(git -C psxrecomp rev-parse --short HEAD) ($(git -C psxrecomp rev-parse HEAD))"
           echo "recomp-ui=$(git -C recomp-ui rev-parse --short HEAD)"
           echo "recomp-net=$(git -C psxrecomp/lib/recomp-net rev-parse --short HEAD)"

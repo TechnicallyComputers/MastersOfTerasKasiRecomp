@@ -49,7 +49,16 @@ if(PSX_PGO STREQUAL "generate")
     add_compile_options(-fprofile-generate=${PSX_PGO_DIR})
     add_link_options(-fprofile-generate=${PSX_PGO_DIR})
 elseif(PSX_PGO STREQUAL "use")
-    add_compile_options(-fprofile-use=${PSX_PGO_DIR} -fprofile-correction)
+    # After source edits, GCC floods -Wcoverage-mismatch / -Wmissing-profile
+    # against a stale .gcda set. Keep best-effort use (-fprofile-correction)
+    # but don't spam the build log — retrain via scripts/pgo_motk_intro.sh
+    # when you want fresh profiles.
+    add_compile_options(
+        -fprofile-use=${PSX_PGO_DIR}
+        -fprofile-correction
+        -Wno-coverage-mismatch
+        -Wno-missing-profile
+    )
     add_link_options(-fprofile-use=${PSX_PGO_DIR})
 endif()
 

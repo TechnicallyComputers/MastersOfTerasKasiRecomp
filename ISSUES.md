@@ -94,10 +94,11 @@ CD-only `spu_render` kept. Intro host FPS still ~40–50 under load-delay.
 
 With 512 RGB width restored, intros are framed correctly. Present never
 crops draw width. MotK stays in depth24 across intros; trailing cols are
-stale `0x8000` → green/magenta. Policy: blank beyond tracked A0 span;
-**always blank last 8 RGB cols in depth24**; collapse span only on
-FB-class A0s (`w >= 256`); on GP1(07h) height change: reset span + **3
-vblank present-hold** (skip Swap, pin trailing-8, no collapse). Rebuild:
+stale `0x8000` → green/magenta. Policy (landed 2026-07-23): blank beyond
+tracked A0 span; **always blank last 8 RGB cols in depth24** (chroma
+heuristic removed — it under-fired at the intro→crawl cut); collapse
+span only on FB-class A0s (`w >= 256`); on GP1(07h) height change: reset
+span + **3 vblank present-hold** (skip Swap, no span update). Rebuild:
 `build-release`. Confirm intro→crawl cut (no right-edge flicker).
 
 ### FMV host FPS ~45–50 offline (2026-07-21) — known floor
