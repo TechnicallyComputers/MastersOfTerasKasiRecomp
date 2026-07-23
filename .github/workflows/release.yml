@@ -8,6 +8,10 @@
 #     SCPH1001.zip (or loose SCPH1001_{full,dispatch}.c) for link-time BIOS C.
 #     Players still pick SCPH1001.BIN + disc at first launch; neither is in the zip.
 #
+# Framework deps (not MotK gitlink pins):
+#   - mstan/psxrecomp@master
+#   - nested recomp-ui@master + recomp-net@main (float past upstream pins)
+#
 # Triggers:
 #   - workflow_dispatch (manual)
 #   - push tags matching v* (publishes a GitHub Release)
@@ -61,8 +65,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: recursive
+          # MotK gitlink pins are ignored — next step takes upstream master.
+          submodules: false
           fetch-depth: 1
+
+      - name: Checkout psxrecomp upstream master + nested deps
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf psxrecomp
+          git clone --depth=1 --branch master \
+            https://github.com/mstan/psxrecomp.git psxrecomp
+          git -C psxrecomp submodule sync
+          git -C psxrecomp submodule update --init --depth=1 \
+            lib/recomp-ui lib/recomp-net
+          # Float past the SHAs pinned inside upstream psxrecomp.
+          git -C psxrecomp/lib/recomp-ui fetch --depth=1 origin master
+          git -C psxrecomp/lib/recomp-ui checkout -f FETCH_HEAD
+          git -C psxrecomp/lib/recomp-net fetch --depth=1 origin main
+          git -C psxrecomp/lib/recomp-net checkout -f FETCH_HEAD
+          echo "psxrecomp=$(git -C psxrecomp rev-parse --short HEAD) ($(git -C psxrecomp rev-parse HEAD))"
+          echo "recomp-ui=$(git -C psxrecomp/lib/recomp-ui rev-parse --short HEAD)"
+          echo "recomp-net=$(git -C psxrecomp/lib/recomp-net rev-parse --short HEAD)"
 
       - name: Fetch BIOS CI assets (private)
         uses: actions/checkout@v4
