@@ -116,6 +116,7 @@ def main() -> int:
         help="path to the 2448-byte/sector source dump",
     )
     ap.add_argument(
+        "--out-dir",
         "--motk-dir",
         default=os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "motk"
@@ -128,12 +129,16 @@ def main() -> int:
         print(f"source not found: {args.source}", file=sys.stderr)
         return 1
 
-    os.makedirs(args.motk_dir, exist_ok=True)
-    bin_path = os.path.join(args.motk_dir, BIN_NAME)
+    out_dir = args.out_dir
+    os.makedirs(out_dir, exist_ok=True)
+    bin_path = os.path.join(out_dir, BIN_NAME)
+    print("converting sectors (2448 -> 2352)…", flush=True)
     n = convert_bin(args.source, bin_path)
-    print(f"wrote {bin_path} ({n} sectors, {n * DST_SEC} bytes)")
-    write_cue(args.motk_dir)
-    extract_from_bin(bin_path, args.motk_dir)
+    print(f"wrote {bin_path} ({n} sectors, {n * DST_SEC} bytes)", flush=True)
+    print("writing cue…", flush=True)
+    write_cue(out_dir)
+    print("extracting SYSTEM.CNF / SLUS_005.62…", flush=True)
+    extract_from_bin(bin_path, out_dir)
     return 0
 
 
