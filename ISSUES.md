@@ -25,12 +25,15 @@ continuations back to compiled (`native_handoffs≈15.8k`, mismatches
 — residual is VLC leaves `0x8006A9F8`/`0x8006CBE4` / load-delay volume
 (emitter-level charge batching still open).
 
-**Netplay (2026-07-21):** Same-machine FMV ~30–40 was the rematch-safe
-`finish→admit→pace→present` order (depth24 CPU present after admit), not
-lockstep itself (gameplay stays ~60). Restored early-build
-`finish→present→admit/pace` plus half-rate depth24 present skip. Rebuild
-`build-release`; verify intro FPS + tick-0 arm. Barrier still UDP
-`poll()`; pin localhost peers to disjoint CPU halves. Offline full speed.
+**Netplay (2026-07-21 / 2026-07-27):** Same-machine FMV ~30–40 was the
+rematch-safe `finish→admit→pace→present` order (depth24 CPU present after
+admit), not lockstep itself (gameplay stays ~60). Restored early-build
+`finish→present→admit/pace` plus half-rate depth24 **present** skip (every
+other vblank). **2026-07-27:** that skip must not call `skip_pace()` —
+unpaced alternate ticks let decode-fast MotK run ~90 FPS and rush XA/video;
+catch-up unpace is also disabled while `gpu_display_is_depth24()`. Admit
+still every tick; wall pacer every tick → ~60. Barrier still UDP `poll()`;
+pin localhost peers to disjoint CPU halves. Offline full speed.
 
 **Netplay saves (2026-07-20):** Host owns save/load + memcard sync.
 Guest writes only `saves/netplay/`. Flow: local save (both) → hash probe →
@@ -94,12 +97,32 @@ CD-only `spu_render` kept. Intro host FPS still ~40–50 under load-delay.
 
 With 512 RGB width restored, intros are framed correctly. Present never
 crops draw width. MotK stays in depth24 across intros; trailing cols are
-stale `0x8000` → green/magenta. Policy (landed 2026-07-23): blank beyond
-tracked A0 span; **always blank last 8 RGB cols in depth24** (chroma
-heuristic removed — it under-fired at the intro→crawl cut); collapse
-span only on FB-class A0s (`w >= 256`); on GP1(07h) height change: reset
-span + **3 vblank present-hold** (skip Swap, no span update). Rebuild:
-`build-release`. Confirm intro→crawl cut (no right-edge flicker).
+stale `0x8000` → green/magenta. Steady-state present policy
+(`depth24_fix_trailing_margin` in `main.cpp`):
+
+1. Black-fill `[gpu_depth24_rgb_limit .. present_w)` from tracked A0 span
+   (span resets on depth24 mode toggle and left-anchored FB-class blits).
+2. If span reports full coverage, chroma-gate the last **8** RGB cols and
+   black-fill dense junk (do **not** replicate the last good column —
+   that streaked MotK's starfield).
+
+Never shrink the GL/SDL draw width (cropping caused a flickering black
+pillar). See also **second-video cutover** below for the intro→crawl flash.
+
+### Second-video FMV cutover colorful square (2026-07-27) — FIXED
+
+At the cut into MotK's second intro movie (and similar depth24 restarts),
+one present could show a **large colorful square** on the right: leftover
+VRAM still read as packed RGB888. Upload-span blanking missed it when the
+first A0 already reported full coverage (junk inside the "good" region).
+
+**Fix (present-path, MotK-validated):** `depth24_cutover_tick` in
+`psxrecomp/runtime/src/main.cpp` — after an MDEC idle gap while depth24
+(or after leaving depth24), arm a **2-present full-frame black hold**
+before showing decoded video again. First movie of a session is unchanged
+(no prior gap). Brief black flash is acceptable; rainbow square is gone.
+
+Rebuild: `build` / `build-release`. Confirm intro → second video cutover.
 
 ### FMV host FPS ~45–50 offline (2026-07-21) — known floor
 
@@ -131,3 +154,5 @@ HLE until it is validated against real FMV decode.
 1. Prefer Release for playtesting; RelWithDebInfo + `fmv_state` to confirm
    `mdec_decode_count` increases during the logo/crawl.
 2. Source dump must be 2448 B/sector (`tools/prepare_disc.py`).
+3. Slow launcher open: `PSX_LAUNCHER_BOOT_TIMING=1` — see
+   [`docs/LAUNCHER_BOOT_TIMING.md`](docs/LAUNCHER_BOOT_TIMING.md).
