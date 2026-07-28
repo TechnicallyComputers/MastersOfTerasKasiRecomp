@@ -93,6 +93,23 @@ GitHub Actions workflow: `.github/workflows/release.yml`
   OS runs intro PGO train on that runner (needs LFS disc + `SCPH1001.BIN` in
   `psxrecomp-ci-assets`; GCC `.gcda` on Linux/Windows, Clang profdata on macOS).
 - Local pack: `scripts/package_release.sh build-release linux-x64`
+- **CachyOS/Arch → Fedora KDE test packs:** do **not** ship a native CachyOS
+  binary (glibc 2.43+ will not load on Fedora 42’s glibc 2.41). From CachyOS:
+  ```bash
+  sudo pacman -S podman patchelf zip   # once
+  scripts/build_for_fedora.sh          # Fedora 42 container build + lib/ bundle
+  # → dist/motk-<VERSION>-linux-fedora42-bundled.zip
+  ```
+  Copy the zip to Fedora, unzip, `./run.sh`. If Browse BIOS dies before a
+  dialog: `sudo dnf install kdialog`. (`FEDORA_TAG=41` for Fedora 41.)
+- **Browse BIOS SIGSEGV capture:**  
+  `scripts/debug_bios_browse_crash.sh [path-to-exe]`  
+  Click Browse BIOS when the modal appears; gdb dumps `bt` / `bt full` to
+  `dist/debug-bios-browse-crash-*.log` (handles LTO `.constprop` symbol names).
+  Prefer a RelWithDebInfo build for readable frames.
+- **Linux file picker:** recomp-ui uses `posix_spawn` of zenity/kdialog (not
+  tinyfd `popen`/`vfork`) so Browse BIOS / Change ROM does not SIGSEGV under
+  multithreaded SDL. Install `kdialog` (Fedora KDE) or `zenity`.
 
 Clone with submodules:
 
