@@ -89,10 +89,16 @@ set(RECOMP_UI_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/recomp-ui" CACHE PATH
     "Path to recomp-ui launcher" FORCE)
 
 # Prefer the framework-vendored recomp-net submodule (CI recursive checkout).
-# Still overridable with -DRECOMP_NET_ROOT=…; disable with -DPSX_NETPLAY=OFF.
-if(NOT RECOMP_NET_ROOT AND EXISTS "${PSXRECOMP_ROOT}/lib/recomp-net/CMakeLists.txt")
-    set(RECOMP_NET_ROOT "${PSXRECOMP_ROOT}/lib/recomp-net" CACHE PATH
-        "Path to recomp-net; empty = auto-discover" FORCE)
+# Opt into PSX_NETPLAY when present (runtime.cmake defaults OFF).
+# Override with -DRECOMP_NET_ROOT=… or -DPSX_NETPLAY=OFF.
+if(EXISTS "${PSXRECOMP_ROOT}/lib/recomp-net/CMakeLists.txt")
+    if(NOT RECOMP_NET_ROOT)
+        set(RECOMP_NET_ROOT "${PSXRECOMP_ROOT}/lib/recomp-net" CACHE PATH
+            "Path to recomp-net; empty = auto-discover" FORCE)
+    endif()
+    if(NOT DEFINED PSX_NETPLAY)
+        set(PSX_NETPLAY ON)
+    endif()
 endif()
 
 include("${PSXRECOMP_ROOT}/runtime/runtime.cmake")
