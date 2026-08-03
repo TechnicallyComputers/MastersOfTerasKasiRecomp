@@ -4,9 +4,9 @@
 /out/
 /.happypath/
 
-# Recompiler output is tracked in this private game repo so CI can build
-# without a disc. Regenerate with psxrecomp-game when seeds/overlays change.
-# (Still never commit BIOS / disc images — see /motk/ and /bios/ below.)
+# Setup-host releases: players Generate game C locally (CI clears generated/).
+# Keep /generated/ gitignored; regenerate with psxrecomp_cli.py / the wizard.
+/generated/
 
 # Release packaging artifacts
 /release-stage/
@@ -17,6 +17,7 @@
 /motk/
 /isos/
 /saves/
+/prepared_disc/
 
 # Disc / image / memcard formats
 *.bin
@@ -59,3 +60,4 @@ __pycache__/
 
 # Local BIOS (symlink or copy — do not commit)
 /bios/
+settings.toml
