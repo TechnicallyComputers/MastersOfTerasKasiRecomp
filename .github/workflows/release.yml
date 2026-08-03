@@ -140,9 +140,13 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
+          # X11 + xtst required when FetchContent builds SDL3 (XTEST).
           sudo apt-get install -y --no-install-recommends \
             build-essential cmake ninja-build pkg-config \
-            libsdl2-dev libgl1-mesa-dev zip
+            libsdl2-dev libgl1-mesa-dev libxtst-dev \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev \
+            libxfixes-dev libxi-dev libxss-dev libxkbcommon-dev \
+            libasound2-dev libpulse-dev libudev-dev zip
 
       - name: Install deps (macOS)
         if: runner.os == 'macOS'
