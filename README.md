@@ -18,15 +18,15 @@ Holds game config, seeds, and build glue. Players Generate game C locally
 | `generated/` | Local recompiler output (gitignored; first-run Generate / `psxrecomp-game`) |
 | `VERSION` | Release / lobby match pin (e.g. `0.1.0`) |
 | `DISC.md` | Disc identity + hashes |
-| `tools/prepare_disc.py` | Rebuild `motk/` from the source 2448-byte dump |
+| `tools/prepare_disc.py` | Stage Redump cue/bins into `motk/` (wraps framework prepare) |
 
 ## Disc
 
-Source dump (2448-byte sectors with subchannel):
+Canonical dump is the Redump-style multi-track USA cue (see `DISC.md`):
 
-`/mnt/crucial4tb/Emulation/roms/ps/Star Wars - Masters of Teras Kasi (USA).iso`
+`/mnt/crucial4tb/Emulation/roms/ps/Star Wars - Masters of Teras Kasi (USA)/Star Wars - Masters of Teras Kasi (USA).cue`
 
-Working image for the runtime is MODE2/2352 under `motk/`. Recreate with:
+Stage into `motk/` (preserves data + audio tracks, extracts boot EXE):
 
 ```bash
 python3 tools/prepare_disc.py
