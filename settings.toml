@@ -1,0 +1,10 @@
+# psxrecomp user settings - written by the launcher. Safe to hand-edit.
+# Overrides the bundled game.toml; the command line overrides this file.
+
+[video]
+
+[audio]
+
+[netplay]
+player_name = "sdf"
+lobby_url = "ws://netplay.technicallycomputers.ca:8765"
