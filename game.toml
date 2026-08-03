@@ -42,6 +42,9 @@ fmv_load_delay_relax = false
 # after the HLE is validated against MotK FMV (not just the inter-movie gap).
 
 [video]
+# First-run / packaged default: OpenGL. Software remains an explicit opt-in
+# (settings.toml or launcher toggle). Netplay keeps OpenGL for present with
+# CPU-authoritative software raster (see ROLLBACK_MOTK_HOOKUP §88).
 renderer = "opengl"
 aspect_ratio = "4:3"
 

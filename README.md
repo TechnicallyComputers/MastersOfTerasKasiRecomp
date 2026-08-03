@@ -3,8 +3,8 @@
 *Star Wars: Masters of Teras Kasi* (USA, **SLUS-00562**, Oct 31, 1997) —
 game project for [PSXRecomp](https://github.com/TechnicallyComputers/psxrecomp).
 
-Holds game config, seeds, build glue, and (for private CI) recompiler
-`generated/` output. Disc images and BIOS stay local and gitignored.
+Holds game config, seeds, and build glue. Players Generate game C locally
+(setup-host releases). Disc images and BIOS stay local and gitignored.
 
 ## Layout
 
@@ -15,7 +15,7 @@ Holds game config, seeds, build glue, and (for private CI) recompiler
 | `motk/` | Local disc `.bin`/`.cue`, `SLUS_005.62`, `SYSTEM.CNF` (gitignored) |
 | `psxrecomp/` | Framework submodule (`mstan/psxrecomp`; keeps `lib/recomp-net`) |
 | `recomp-ui/` | Launcher UI submodule (`mstan/recomp-ui`) at game root |
-| `generated/` | Recompiler output (tracked for CI; regenerate when seeds change) |
+| `generated/` | Local recompiler output (gitignored; first-run Generate / `psxrecomp-game`) |
 | `VERSION` | Release / lobby match pin (e.g. `0.1.0`) |
 | `DISC.md` | Disc identity + hashes |
 | `tools/prepare_disc.py` | Rebuild `motk/` from the source 2448-byte dump |
@@ -74,7 +74,8 @@ retrain so profiles stay fresh (`-DPSX_PGO=use` with stale `.gcda` underperforms
 
 ## CI / release packages
 
-GitHub Actions workflow: `.github/workflows/release.yml`
+Setup-host workflow (no generated C, no private CI assets, no PGO in CI).
+Template: `psxrecomp/docs/ci/templates/setup-release.yml`.
 
 | Artifact | Runner |
 |----------|--------|
@@ -84,15 +85,15 @@ GitHub Actions workflow: `.github/workflows/release.yml`
 | `macos-x64` | `macos-15-intel` (older Intel Macs) |
 
 - Manual: **Actions → Release builds → Run workflow**
-- Tag `v0.1.0` (matching `VERSION`): builds + GitHub Release with zips
-- Packages include the exe, `assets/` (recomp-ui fonts/img), `game.toml`, and
-  `VERSION` — never BIOS/disc
-- CI builds the exact committed **psxrecomp**, game-root **recomp-ui**, and
-  nested **recomp-net** gitlink pins
-- CI configures `-DRNET_ENABLE_ICE=ON` and `-DMOTK_NATIVE=OFF`. Every matrix
-  OS runs intro PGO train on that runner (needs LFS disc + `SCPH1001.BIN` in
-  `psxrecomp-ci-assets`; GCC `.gcda` on Linux/Windows, Clang profdata on macOS).
-- Local pack: `scripts/package_release.sh build-release linux-x64`
+- Tag `v*` (matching `VERSION`): builds + GitHub Release with `motk-*.zip`
+- Zip is a Generate & rebuild host: exe + sources + `psxrecomp-game` /
+  `psxrecomp-bios` — never BIOS dumps, disc images, or prebuilt game C
+- CI: `-DPSXRECOMP_FORCE_SETUP_HOST=ON -DPSX_NETPLAY=ON -DRNET_ENABLE_ICE=ON
+  -DMOTK_NATIVE=OFF` (no `PSX_PGO`)
+- Local pack: `scripts/package_setup_release.sh build-ci linux-x64 build-recompiler`
+- Full-player local packs (after Generate): `scripts/package_release.sh` still
+  exists for optional use; CI no longer calls it
+- PGO stays user-local after Generate (`scripts/pgo_motk_intro.sh`)
 - **CachyOS/Arch → Fedora KDE test packs:** do **not** ship a native CachyOS
   binary (glibc 2.43+ will not load on Fedora 42’s glibc 2.41). From CachyOS:
   ```bash
