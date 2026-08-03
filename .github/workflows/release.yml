@@ -1,36 +1,38 @@
-# Build MotK Release packages for Linux, Windows, macOS (arm64 + Intel).
-# Does not ship BIOS or disc images in the player zip.
+# Build MotK setup-host packages for Linux, Windows, macOS (arm64 + Intel).
+# Ships a GUI generate & rebuild host + sources + psxrecomp-game/bios tools —
+# not game C, not BIOS backends, not disc images. First-run Generate emits
+# OpenBIOS (+ optional SCPH1001) and game C locally, then rebuilds.
 #
-# Requires:
-#   - generated/ (recompiled game C) committed in this repo for CI.
-#   - Secret CI_ASSETS_TOKEN: fine-grained PAT with Contents:Read on
-#     TechnicallyComputers/psxrecomp-ci-assets (private). That repo supplies:
-#       - SCPH1001.zip (or loose SCPH1001_{full,dispatch}.c) for link-time BIOS C
-#       - SCPH1001.BIN + motk/*.cue|*.bin (Git LFS) for per-OS intro PGO train
-#     Players still pick BIOS + disc at first launch; neither is in the zip.
+# Template: psxrecomp/docs/ci/templates/setup-release.yml
+# Guide:    psxrecomp/docs/GAME_PROJECT_SETUP.md
 #
-# Framework deps use this repository's exact gitlink pins:
-#   - psxrecomp at the game root (which owns its recomp-net pin)
-#   - recomp-ui at the game root
-#
-# All matrix packages are PGO-trained on the MotK intro (instrument → train →
-# use) on that runner's toolchain (GCC .gcda on Linux/Windows; Clang
-# .profraw→profdata on macOS). Profiles are not portable across OS/arch.
+# No private CI assets. No BIOS dumps. No generated/ required.
+# Do not set PSX_PGO in CI (PGO stays user-local after Generate).
 #
 # Triggers:
-#   - workflow_dispatch (manual)
-#   - push tags matching v* (publishes a GitHub Release)
+#   - workflow_dispatch — prompts for version; optionally tags + publishes
+#   - push tags matching v* — builds + publishes that tag
 
 name: Release builds
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. 0.1.0 or v0.1.0)'
+        required: true
+        type: string
+      publish:
+        description: 'Create git tag vX.Y.Z and GitHub Release'
+        required: true
+        type: boolean
+        default: true
   push:
     tags:
       - 'v*'
 
 concurrency:
-  group: motk-release-${{ github.ref }}
+  group: motk-release-${{ github.event_name }}-${{ github.ref }}-${{ github.run_id }}
   cancel-in-progress: true
 
 permissions:
@@ -40,8 +42,39 @@ env:
   CMAKE_BUILD_TYPE: Release
 
 jobs:
+  prepare:
+    name: Resolve version
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      tag: ${{ steps.meta.outputs.tag }}
+      publish: ${{ steps.meta.outputs.publish }}
+    steps:
+      - name: Normalize version / tag
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            RAW="${{ github.event.inputs.version }}"
+            PUBLISH="${{ github.event.inputs.publish }}"
+          else
+            RAW="${{ github.ref_name }}"
+            PUBLISH="true"
+          fi
+          RAW="$(printf '%s' "${RAW}" | tr -d '[:space:]')"
+          VER="${RAW#v}"
+          if [[ ! "${VER}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.+-][A-Za-z0-9.+-]*)?$ ]]; then
+            echo "::error::invalid version '${RAW}' (want X.Y.Z or vX.Y.Z)"
+            exit 1
+          fi
+          echo "version=${VER}" >>"$GITHUB_OUTPUT"
+          echo "tag=v${VER}" >>"$GITHUB_OUTPUT"
+          echo "publish=${PUBLISH}" >>"$GITHUB_OUTPUT"
+
   build:
     name: ${{ matrix.artifact }}
+    needs: prepare
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -50,26 +83,22 @@ jobs:
           - os: ubuntu-24.04
             artifact: linux-x64
             shell: bash
-            pgo: true
           - os: windows-2022
             artifact: windows-x64
             shell: 'msys2 {0}'
-            pgo: true
           - os: macos-15
             artifact: macos-arm64
             shell: bash
             deployment_target: '11.0'
-            pgo: true
           - os: macos-15-intel
             artifact: macos-x64
             shell: bash
             deployment_target: '11.0'
-            pgo: true
-
     defaults:
       run:
         shell: ${{ matrix.shell }}
-
+    env:
+      RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -77,119 +106,20 @@ jobs:
           submodules: recursive
           fetch-depth: 1
 
+      - name: Pin VERSION
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' "${RELEASE_VERSION}" >VERSION
+          echo "VERSION=$(cat VERSION)"
+
       - name: Record pinned framework revisions
         shell: bash
-        run: |
-          set -euo pipefail
-          echo "psxrecomp=$(git -C psxrecomp rev-parse --short HEAD) ($(git -C psxrecomp rev-parse HEAD))"
-          echo "recomp-ui=$(git -C recomp-ui rev-parse --short HEAD)"
-          echo "recomp-net=$(git -C psxrecomp/lib/recomp-net rev-parse --short HEAD)"
+        run: bash psxrecomp/tools/ci/record_pins.sh
 
-      # Windows runners ship Git LFS; install only where apt/brew is needed.
-      # Use bash (not MSYS2) so this runs before setup-msys2.
-      - name: Install git-lfs (Linux)
-        if: runner.os == 'Linux'
+      - name: Setup host mode (no game C / BIOS backends in CI)
         shell: bash
-        run: |
-          set -euo pipefail
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends git-lfs
-          git lfs install
-
-      - name: Install git-lfs (macOS)
-        if: runner.os == 'macOS'
-        shell: bash
-        run: |
-          set -euo pipefail
-          brew install git-lfs
-          git lfs install
-
-      - name: Fetch CI assets (private, LFS)
-        uses: actions/checkout@v4
-        with:
-          repository: TechnicallyComputers/psxrecomp-ci-assets
-          token: ${{ secrets.CI_ASSETS_TOKEN }}
-          path: _ci-assets
-          fetch-depth: 1
-          lfs: true
-
-      - name: Install BIOS generated into psxrecomp/generated
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p psxrecomp/generated
-          if command -v python3 >/dev/null 2>&1; then PY=python3; else PY=python; fi
-          "$PY" - <<'PY'
-          import shutil
-          import zipfile
-          from pathlib import Path
-
-          dest = Path("psxrecomp/generated")
-          assets = Path("_ci-assets")
-          dest.mkdir(parents=True, exist_ok=True)
-
-          for name in (
-              "SCPH1001_full.c",
-              "SCPH1001_dispatch.c",
-              "SCPH1001.emitter.sha",
-          ):
-              src = assets / name
-              if src.is_file():
-                  shutil.copy2(src, dest / name)
-
-          for zpath in sorted(assets.rglob("*.zip")):
-              staging = dest / "_unzip"
-              if staging.exists():
-                  shutil.rmtree(staging)
-              staging.mkdir(parents=True)
-              with zipfile.ZipFile(zpath) as zf:
-                  zf.extractall(staging)
-              for p in staging.rglob("SCPH1001_*"):
-                  if p.is_file():
-                      shutil.copy2(p, dest / p.name)
-              for p in staging.rglob("SCPH1001.emitter.sha"):
-                  if p.is_file():
-                      shutil.copy2(p, dest / p.name)
-              shutil.rmtree(staging)
-
-          missing = [
-              n
-              for n in ("SCPH1001_full.c", "SCPH1001_dispatch.c")
-              if not (dest / n).is_file()
-          ]
-          if missing:
-              listing = sorted(p.name for p in assets.iterdir()) if assets.is_dir() else []
-              raise SystemExit(
-                  f"missing {missing} under psxrecomp/generated after install; "
-                  f"_ci-assets has: {listing}"
-              )
-          full = dest / "SCPH1001_full.c"
-          print(f"BIOS generated OK ({full.stat().st_size} bytes)")
-          PY
-
-      - name: Require generated game + BIOS C
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ ! -f generated/SLUS_005.62_dispatch.c ]]; then
-            echo "::error::generated/ is missing. MotK CI expects committed recompiler output."
-            echo "Regenerate with psxrecomp-game --config game.toml and commit generated/."
-            exit 1
-          fi
-          if ! compgen -G 'generated/SLUS_005.62_full_*.c' >/dev/null && \
-             [[ ! -f generated/SLUS_005.62_full.c ]]; then
-            echo "::error::generated/ has no SLUS_005.62_full_*.c shards (or full.c)."
-            exit 1
-          fi
-          echo "generated/ OK ($(ls generated/SLUS_005.62_full_*.c 2>/dev/null | wc -l) shards)"
-          for f in psxrecomp/generated/SCPH1001_full.c \
-                   psxrecomp/generated/SCPH1001_dispatch.c; do
-            if [[ ! -f "$f" ]]; then
-              echo "::error::missing $f — check CI_ASSETS_TOKEN and psxrecomp-ci-assets"
-              exit 1
-            fi
-          done
-          echo "BIOS generated/ OK"
+        run: bash psxrecomp/tools/ci/clear_generated.sh
 
       - name: Setup MSYS2 (Windows)
         if: runner.os == 'Windows'
@@ -203,6 +133,7 @@ jobs:
             mingw-w64-x86_64-ninja
             mingw-w64-x86_64-SDL2
             mingw-w64-x86_64-pkgconf
+            curl
             zip
 
       - name: Install deps (Linux)
@@ -216,16 +147,24 @@ jobs:
       - name: Install deps (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew install cmake ninja pkg-config sdl2
-          # zip is preinstalled; llvm-profdata via xcrun / Xcode CLT
+          brew install cmake ninja pkg-config sdl3 || brew install cmake ninja pkg-config sdl2
 
-      - name: Configure & build (no PGO)
-        if: ${{ !matrix.pgo }}
+      # Windows: build emitters with llvm-mingw from cmake-clang-v1 (static CLI).
+      # Zip still omits toolchain/ — fetch is for the build machine only.
+      - name: Fetch portable toolchain (Windows emitters)
+        if: runner.os == 'Windows'
+        uses: ./psxrecomp/.github/actions/fetch-toolchain
+        with:
+          artifact: ${{ matrix.artifact }}
+
+      - name: Build recompiler tools (emitters)
+        uses: ./psxrecomp/.github/actions/build-emitters
+
+      - name: Configure & build setup host
         env:
           CMAKE_OSX_DEPLOYMENT_TARGET: ${{ matrix.deployment_target || '' }}
         run: |
           set -euo pipefail
-          VERSION="$(tr -d '[:space:]' < VERSION)"
           EXTRA=()
           if [[ -n "${CMAKE_OSX_DEPLOYMENT_TARGET:-}" ]]; then
             EXTRA+=("-DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}")
@@ -234,161 +173,26 @@ jobs:
           cmake -S . -B build-ci -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DMOTK_NATIVE=OFF \
+            -DPSXRECOMP_FORCE_SETUP_HOST=ON \
+            -DPSXRECOMP_ALLOW_NO_BIOS=ON \
+            -DPSX_NETPLAY=ON \
             -DRNET_ENABLE_ICE=ON \
-            -DPSX_GAME_VERSION="${VERSION}" \
+            -DPSX_GAME_VERSION="${RELEASE_VERSION}" \
             "${EXTRA[@]}"
           cmake --build build-ci --target psx-runtime -j"${JOBS}"
 
-      - name: Configure, PGO train intro, rebuild
-        if: ${{ matrix.pgo }}
-        env:
-          PGO_TRAIN_SECS: '75'
-          PGO_TRAIN_RUNS: '2'
-          CMAKE_OSX_DEPLOYMENT_TARGET: ${{ matrix.deployment_target || '' }}
+      - name: Package setup zip
         run: |
           set -euo pipefail
-          VERSION="$(tr -d '[:space:]' < VERSION)"
-          JOBS="$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)"
-          LOGDIR="${TMPDIR:-/tmp}"
-          mkdir -p "${LOGDIR}"
-          EXTRA=()
-          if [[ -n "${CMAKE_OSX_DEPLOYMENT_TARGET:-}" ]]; then
-            EXTRA+=("-DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}")
+          chmod +x scripts/package_setup_release.sh
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            export PSXRECOMP_RUNTIME_BIN_DIR=/mingw64/bin
+            export BPE_RUNTIME_BIN_DIR=/mingw64/bin
           fi
-
-          DISC_CUE='motk/Star Wars - Masters of Teras Kasi (USA).cue'
-          DISC_BIN='motk/Star Wars - Masters of Teras Kasi (USA).bin'
-          BIOS_SRC=''
-          for cand in \
-              '_ci-assets/SCPH1001.BIN' \
-              '_ci-assets/SCPH1001.bin' \
-              '_ci-assets/bios/SCPH1001.BIN' \
-              '_ci-assets/bios/SCPH1001.bin'; do
-            if [[ -f "$cand" ]]; then BIOS_SRC="$cand"; break; fi
-          done
-          if [[ -z "${BIOS_SRC}" ]]; then
-            echo "::error::SCPH1001.BIN missing under _ci-assets (need real BIOS for PGO train)"
-            find _ci-assets -maxdepth 2 -type f | head -40
-            exit 1
-          fi
-          if [[ ! -f "_ci-assets/${DISC_CUE}" || ! -f "_ci-assets/${DISC_BIN}" ]]; then
-            echo "::error::MotK cue/bin missing under _ci-assets/motk (LFS pull?)"
-            ls -la _ci-assets/motk || true
-            exit 1
-          fi
-          # Pointer files are ~130 bytes; real BIN is hundreds of MB.
-          BIN_SZ="$(wc -c < "_ci-assets/${DISC_BIN}" | tr -d '[:space:]')"
-          if [[ "${BIN_SZ}" -lt 100000000 ]]; then
-            echo "::error::disc .bin is only ${BIN_SZ} bytes — Git LFS did not materialize"
-            exit 1
-          fi
-          BIOS_SZ="$(wc -c < "${BIOS_SRC}" | tr -d '[:space:]')"
-          if [[ "${BIOS_SZ}" -lt 500000 || "${BIOS_SZ}" -gt 600000 ]]; then
-            echo "::error::BIOS size ${BIOS_SZ} looks wrong (want ~512 KiB)"
-            exit 1
-          fi
-
-          mkdir -p bios motk
-          cp -f "${BIOS_SRC}" bios/SCPH1001.BIN
-          cp -f "_ci-assets/${DISC_CUE}" "${DISC_CUE}"
-          cp -f "_ci-assets/${DISC_BIN}" "${DISC_BIN}"
-          echo "PGO train assets: bios=${BIOS_SZ} disc_bin=${BIN_SZ} jobs=${JOBS}"
-
-          # 1) Instrumented build
-          cmake -S . -B build-ci -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DMOTK_NATIVE=OFF \
-            -DRNET_ENABLE_ICE=ON \
-            -DPSX_GAME_VERSION="${VERSION}" \
-            -DPSX_PGO=generate \
-            "${EXTRA[@]}"
-          cmake --build build-ci --target psx-runtime -j"${JOBS}"
-
-          EXE=./build-ci/Masters_of_Teras_Kasi_Recompiled
-          if [[ -f "${EXE}.exe" ]]; then EXE="${EXE}.exe"; fi
-          if [[ ! -f "${EXE}" ]]; then
-            echo "::error::missing train binary ${EXE}"
-            ls -la build-ci | head -40
-            exit 1
-          fi
-
-          # 2) Train on logo+crawl (headless; merge profiles across runs)
-          rm -rf build-ci/pgo
-          mkdir -p build-ci/pgo
-          export SDL_VIDEODRIVER=dummy
-          export PSX_HEADLESS=1
-          # Clang/AppleClang instr-PGO; ignored by GCC gcov path.
-          export LLVM_PROFILE_FILE="${PWD}/build-ci/pgo/motk-%p.profraw"
-          for run in $(seq 1 "${PGO_TRAIN_RUNS}"); do
-            echo "PGO train run ${run}/${PGO_TRAIN_RUNS} (${PGO_TRAIN_SECS}s)..."
-            "${EXE}" --no-launcher --headless \
-              --game game.toml \
-              --disc "${DISC_CUE}" \
-              --bios bios/SCPH1001.BIN \
-              >"${LOGDIR}/motk_pgo_train_${run}.log" 2>&1 &
-            MPID=$!
-            sleep "${PGO_TRAIN_SECS}"
-            # Soft-stop: runtime maps SIGTERM/SIGINT → exit(0) so PGO
-            # writers flush. Bare kill without that leaves 0 profiles.
-            if kill -0 "${MPID}" 2>/dev/null; then
-              kill -TERM "${MPID}" 2>/dev/null || true
-              for _ in $(seq 1 30); do
-                kill -0 "${MPID}" 2>/dev/null || break
-                sleep 1
-              done
-              if kill -0 "${MPID}" 2>/dev/null; then
-                echo "::warning::PGO train pid ${MPID} still alive after TERM; sending KILL"
-                kill -KILL "${MPID}" 2>/dev/null || true
-              fi
-            fi
-            wait "${MPID}" 2>/dev/null || true
-            tail -20 "${LOGDIR}/motk_pgo_train_${run}.log" || true
-          done
-
-          N_GCDA="$(find build-ci -name '*.gcda' 2>/dev/null | wc -l | tr -d '[:space:]')"
-          N_PROFRAW="$(find build-ci -name '*.profraw' 2>/dev/null | wc -l | tr -d '[:space:]')"
-          echo "PGO profiles: ${N_GCDA} .gcda, ${N_PROFRAW} .profraw under build-ci"
-
-          if [[ "${N_PROFRAW}" -ge 1 ]]; then
-            if command -v llvm-profdata >/dev/null 2>&1; then
-              MERGE_BIN=(llvm-profdata)
-            elif xcrun --find llvm-profdata >/dev/null 2>&1; then
-              MERGE_BIN=(xcrun llvm-profdata)
-            else
-              echo "::error::llvm-profdata not found (needed to merge Clang .profraw)"
-              exit 1
-            fi
-            # bash 3.2-safe (macOS /bin/bash): no mapfile.
-            PROFRAWS=()
-            while IFS= read -r _pr; do
-              PROFRAWS+=("${_pr}")
-            done < <(find build-ci -name '*.profraw' -print)
-            "${MERGE_BIN[@]}" merge -sparse "${PROFRAWS[@]}" -o build-ci/pgo/default.profdata
-            ls -la build-ci/pgo/default.profdata
-          fi
-
-          if [[ "${N_GCDA}" -lt 1 && ! -f build-ci/pgo/default.profdata ]]; then
-            echo "::error::no PGO profiles written — train did not flush (soft-exit/PGO)"
-            find build-ci -name '*.gcno' 2>/dev/null | head -20 || true
-            exit 1
-          fi
-
-          # 3) Optimized rebuild using profiles
-          cmake -S . -B build-ci -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DMOTK_NATIVE=OFF \
-            -DRNET_ENABLE_ICE=ON \
-            -DPSX_GAME_VERSION="${VERSION}" \
-            -DPSX_PGO=use \
-            "${EXTRA[@]}"
-          cmake --build build-ci --target psx-runtime -j"${JOBS}"
-          echo "PGO package binary ready (${{ matrix.artifact }})"
-
-      - name: Package
-        run: |
-          set -euo pipefail
-          chmod +x scripts/package_release.sh
-          scripts/package_release.sh build-ci "${{ matrix.artifact }}"
+          export RELEASE_VERSION
+          # Lean zip (no embedded toolchain/). RetComM / wizard download
+          # cmake-clang-v1; pass --embed-toolchain only for offline-first packs.
+          scripts/package_setup_release.sh build-ci "${{ matrix.artifact }}" build-recompiler
           ls -la dist/
 
       - name: Upload artifact
@@ -401,15 +205,17 @@ jobs:
 
   release:
     name: GitHub Release
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [prepare, build]
+    if: needs.prepare.outputs.publish == 'true'
     runs-on: ubuntu-24.04
     steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
         with:
           path: artifacts
-          merge-multiple: false
 
       - name: Flatten zips
         run: |
@@ -418,9 +224,28 @@ jobs:
           find artifacts -type f -name 'motk-*.zip' -exec cp -v {} dist/ \;
           ls -la dist/
 
+      - name: Ensure release tag exists
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            git tag -a "${TAG}" -m "Masters of Teras Kasi ${TAG}"
+          fi
+          if ! git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            git push origin "refs/tags/${TAG}"
+          fi
+
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/motk-*.zip
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: Masters of Teras Kasi ${{ needs.prepare.outputs.tag }}
+          files: |
+            dist/motk-*.zip
           generate_release_notes: true
           fail_on_unmatched_files: true
+          target_commitish: ${{ github.sha }}

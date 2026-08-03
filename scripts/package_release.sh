@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-# Stage a MotK release zip next to the built runtime (no BIOS/disc).
+# Stage a MotK release zip next to the built runtime.
+#
+# Ships the redistributable OpenBIOS image this build was compiled against
+# (bios/openbios.bin). Does NOT include a game disc or retail SCPH* dumps.
 #
 # Usage:
 #   scripts/package_release.sh <build-dir> <artifact-tag>
@@ -82,6 +85,43 @@ if [[ ! -f "${STAGE}/assets/img/boxart.tga" ]]; then
   fi
 fi
 
+# Bundled OpenBIOS — required at runtime next to the exe (identity-matched to
+# the compiled-in OpenBIOS backend). Prefer POST_BUILD staging beside the
+# binary; fall back to the tree copy used as the CMake source.
+OPENBIOS_BIN=""
+OPENBIOS_LICENSE=""
+for cand in \
+  "${EXE_DIR}/bios/openbios.bin" \
+  "${BUILD_DIR}/bios/openbios.bin" \
+  "${ROOT}/psxrecomp/bios/openbios.bin"
+do
+  if [[ -f "${cand}" ]]; then
+    OPENBIOS_BIN="${cand}"
+    break
+  fi
+done
+for cand in \
+  "${EXE_DIR}/bios/OpenBIOS.LICENSE" \
+  "${BUILD_DIR}/bios/OpenBIOS.LICENSE" \
+  "${ROOT}/psxrecomp/bios/OpenBIOS.LICENSE"
+do
+  if [[ -f "${cand}" ]]; then
+    OPENBIOS_LICENSE="${cand}"
+    break
+  fi
+done
+
+if [[ -z "${OPENBIOS_BIN}" ]]; then
+  echo "error: bios/openbios.bin not found (rebuild psx-runtime to stage it)" >&2
+  exit 1
+fi
+
+mkdir -p "${STAGE}/bios"
+cp -a "${OPENBIOS_BIN}" "${STAGE}/bios/openbios.bin"
+if [[ -n "${OPENBIOS_LICENSE}" ]]; then
+  cp -a "${OPENBIOS_LICENSE}" "${STAGE}/bios/OpenBIOS.LICENSE"
+fi
+
 cp -a "${ROOT}/game.toml" "${STAGE}/"
 cp -a "${ROOT}/VERSION" "${STAGE}/"
 
@@ -89,10 +129,14 @@ cat > "${STAGE}/README.txt" <<EOF
 Masters of Teras Kasi Recompiled ${VERSION}
 Platform pack: ${ARTIFACT_TAG}
 
-This build does NOT include a PlayStation BIOS or game disc.
-On first launch, select:
-  - SCPH1001.BIN (BIOS)
-  - Your legally obtained Masters of Teras Kasi disc image (.cue/.bin)
+BIOS
+  This build ships OpenBIOS (bios/openbios.bin) — leave the launcher BIOS
+  setting on "Bundled BIOS". Retail dumps (e.g. SCPH1001.BIN) are NOT
+  accepted unless the binary was compiled from that exact image.
+
+Game disc
+  On first launch, select your legally obtained Masters of Teras Kasi
+  disc image (.cue/.bin). The disc is not included in this zip.
 
 Netplay lobbies match on game title + this VERSION string.
 EOF
