@@ -3,11 +3,28 @@ name = "Star Wars: Masters of Teras Kasi"
 id = "SLUS-00562"
 players = 2
 exe = "motk/SLUS_005.62"
-disc = "motk/Star Wars - Masters of Teras Kasi (USA).bin"
+disc = "motk/Star Wars - Masters of Teras Kasi (USA).cue"
 load_address = "0x80010000"
 entry_pc = "0x80065A44"
 text_size = "0x0009B800"
 stack_base = "0x801FFFF0"
+
+# Disc normalize via psxrecomp/tools/prepare_disc.py. Prefer the Redump
+# multi-track cue (data Track 01 + AUDIO). out_dir MUST match [game].exe
+# so psxrecomp-game finds the boot EXE after Generate. known_* digests are
+# for data Track 01 (verify/prepare hash the first BINARY FILE in the cue).
+[prepare_disc]
+out_dir = "motk"
+bin_name = "Star Wars - Masters of Teras Kasi (USA) (Track 01).bin"
+cue_name = "Star Wars - Masters of Teras Kasi (USA).cue"
+boot_exe = "SLUS_005.62"
+known_sizes = [108006192]
+known_md5 = [
+  "8df14d97706048c2b795942783e4cbb2",
+]
+known_sha1 = [
+  "b9534175f589690586962f928a9198bfdb7cbb37",
+]
 
 [recompiler]
 seeds = "seeds/ghidra_funcs.txt"

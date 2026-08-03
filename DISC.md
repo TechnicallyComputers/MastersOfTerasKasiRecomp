@@ -7,9 +7,9 @@ Local-only dump. **Do not commit** the disc image or extracted EXE.
 | Title | Star Wars: Masters of Teras Kasi (USA) |
 | Serial | SLUS-00562 |
 | Boot EXE | `SLUS_005.62` |
-| Source path | `/mnt/crucial4tb/Emulation/roms/ps/Star Wars - Masters of Teras Kasi (USA).iso` |
-| Source format | Raw CD with subchannel (2448-byte sectors) |
-| Working format | `motk/*.bin` + `motk/*.cue` — MODE2/2352 (subchannel stripped) |
+| Source path | `/mnt/crucial4tb/Emulation/roms/ps/Star Wars - Masters of Teras Kasi (USA)/Star Wars - Masters of Teras Kasi (USA).cue` |
+| Source format | Redump-style multi-track: Track 01 `MODE2/2352` + Tracks 02–17 `AUDIO` |
+| Working tree | `motk/` — full cue + track bins + extracted `SLUS_005.62` / `SYSTEM.CNF` |
 
 ## Boot EXE (from `SYSTEM.CNF` + PS-X EXE header)
 
@@ -22,30 +22,41 @@ Local-only dump. **Do not commit** the disc image or extracted EXE.
 | Stack (`SYSTEM.CNF`) | `0x801FFF00` |
 | Stack (EXE header / `game.toml`) | `0x801FFFF0` |
 
-## Local working image (2352)
+## Data track (Track 01) — verify / prepare digests
 
-Produced by stripping the trailing 96-byte subchannel from each source sector.
-
-| Field | Value |
-|-------|-------|
-| Path | `motk/Star Wars - Masters of Teras Kasi (USA).bin` |
-| Size | 461,772,864 bytes (196,332 × 2352) |
-| MD5 | `d3b3d3aaa70b6f98983bafeb8daf24a1` |
-| SHA-1 | `2ada1f21012660b5eb2eb1dc752cdfcfb253ff8a` |
-
-## Source image (2448, as found)
+`game.toml` `[prepare_disc].known_*` hashes this file (first `BINARY` in the cue).
 
 | Field | Value |
 |-------|-------|
-| Size | 480,620,736 bytes (196,332 × 2448) |
-| MD5 | `6b6e11e4ae456d4e307d8e541e26decd` |
-| SHA-1 | `deabb6b39e8857cdbbaacbd72cb0e26646183a63` |
+| Path | `…/Star Wars - Masters of Teras Kasi (USA) (Track 01).bin` |
+| Size | 108,006,192 bytes (45,921 × 2352) |
+| MD5 | `8df14d97706048c2b795942783e4cbb2` |
+| SHA-1 | `b9534175f589690586962f928a9198bfdb7cbb37` |
 
-Root directory also contains `FILE.WFF` and `MOVIE.STR` (not needed for initial recomp bring-up).
+Root directory: `SYSTEM.CNF`, `SLUS_005.62`, `FILE.WFF`, `MOVIE.STR`.
 
-## Recreate `motk/` from the source ISO
+## Full dump
+
+17 track bins + cue under the source directory. All-tracks total ≈ 461,695,248 bytes.
+Audio tracks are required for CDDA; do **not** collapse the dump to a single data bin for play.
+
+## Stage into `motk/`
 
 ```bash
-python3 tools/prepare_disc.py \
-  "/mnt/crucial4tb/Emulation/roms/ps/Star Wars - Masters of Teras Kasi (USA).iso"
+python3 psxrecomp/tools/prepare_disc.py \
+  --config game.toml \
+  --project-root . \
+  "/mnt/crucial4tb/Emulation/roms/ps/Star Wars - Masters of Teras Kasi (USA)/Star Wars - Masters of Teras Kasi (USA).cue"
 ```
+
+Or the MotK wrapper (same default path):
+
+```bash
+python3 tools/prepare_disc.py
+```
+
+## Legacy (do not use)
+
+An older workflow converted a 2448-byte/sector ISO-style dump into a single
+`motk/*.bin`. That image is harder to identify and drops proper multi-track
+CDDA layout. Prefer the Redump cue above.
