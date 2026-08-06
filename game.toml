@@ -32,6 +32,10 @@ out_dir = "generated"
 strict = true
 # Intro FMV VLC leaves (phase_hot static samples) — host locality only.
 hot_funcs = ["0x8006A9F8", "0x8006CBE4"]
+# Emitter-level load-charge batching for those leaves: stack-local cycle
+# accumulator until IRQ/MMIO/exit (guest totals at barriers unchanged).
+# Requires Generate & rebuild (CLI / setup wizard).
+load_charge_batch = true
 
 [runtime]
 debug_port = 4520
@@ -64,6 +68,17 @@ fmv_load_delay_relax = false
 # CPU-authoritative software raster (see ROLLBACK_MOTK_HOOKUP §88).
 renderer = "opengl"
 aspect_ratio = "4:3"
+
+# Local PGO for FMV host pace. Setup/Generate rebuild always passes --no-pgo.
+# Settings → SYSTEM → "Optimize FMV Playback" runs rebuild --force-pgo
+# (instrument → visible intro train → use) on existing generated C — no wizard.
+# Per-peer PGO is OK for rollback; digests must match, binaries need not.
+[pgo]
+enabled = false
+train_secs = 90
+train_runs = 2
+hide_video = false
+mute_host_audio = true
 
 [controller]
 default_mode = "digital"

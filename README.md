@@ -62,14 +62,14 @@ For debugging (port **4520**), use `-DCMAKE_BUILD_TYPE=RelWithDebInfo` and
 ### PGO (intro FMV host pace)
 
 Profile-guided optimization trains the compiler on a real MotK intro run.
-One-shot:
+**Launcher:** Settings → SYSTEM → **Optimize FMV Playback** (after Generate
+once). Peers may PGO independently for rollback. CLI one-shot:
 
 ```bash
 DISPLAY=:0 ./scripts/pgo_motk_intro.sh
 ```
 
-Full write-up: [docs/PGO.md](docs/PGO.md) and
-[psxrecomp/docs/PGO.md](psxrecomp/docs/PGO.md). After large runtime edits,
+Full write-up: [docs/PGO.md](docs/PGO.md). After large runtime edits,
 retrain so profiles stay fresh (`-DPSX_PGO=use` with stale `.gcda` underperforms).
 
 ## CI / release packages
