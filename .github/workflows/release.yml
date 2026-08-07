@@ -257,6 +257,8 @@ jobs:
           # Title root codegen_setup.c must define
           # psx_game_codegen_forward_if_built (see codegen_setup.c.in) or link
           # fails — main.cpp always calls it, including setup-host CI builds.
+          # Netplay titles: set PSX_NETPLAY ON in CMakeLists *before*
+          # include(runtime.cmake). ENABLE_NETPLAY_IF_PRESENT alone is too late.
           cmake -S . -B build-ci -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DMOTK_NATIVE=OFF \
