@@ -99,7 +99,8 @@ Template: `psxrecomp/docs/ci/templates/setup-release.yml`.
 - Zip is a Generate & rebuild host: exe + sources + `psxrecomp-game` /
   `psxrecomp-bios` — never BIOS dumps, disc images, or prebuilt game C
 - CI: `-DPSXRECOMP_FORCE_SETUP_HOST=ON -DPSX_NETPLAY=ON -DRNET_ENABLE_ICE=ON
-  -DMOTK_NATIVE=OFF` (no `PSX_PGO`)
+  -DMOTK_NATIVE=OFF` (no `PSX_PGO`; ICE also defaults ON whenever
+  `PSX_NETPLAY` is set via `runtime.cmake`)
 - Local pack: `scripts/package_setup_release.sh build-ci linux-x64 build-recompiler`
 - Full-player local packs (after Generate): `scripts/package_release.sh` still
   exists for optional use; CI no longer calls it
