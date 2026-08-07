@@ -83,3 +83,10 @@ mute_host_audio = true
 [controller]
 default_mode = "digital"
 allow_hybrid = false
+
+# Online mount gate: data-track digests ([prepare_disc]) prove the right game;
+# TOC policy proves the same drive geometry (GetTN track count). Track-01-only
+# dumps pass prepare hashes but desync FMV vs Redump multi-track cues.
+[netplay]
+require_cue = true
+required_tracks = 17
