@@ -72,6 +72,16 @@ DISPLAY=:0 ./scripts/pgo_motk_intro.sh
 Full write-up: [docs/PGO.md](docs/PGO.md). After large runtime edits,
 retrain so profiles stay fresh (`-DPSX_PGO=use` with stale `.gcda` underperforms).
 
+## Docs
+
+| Doc | Topic |
+|-----|--------|
+| [docs/PGO.md](docs/PGO.md) | Intro FMV profile-guided optimize |
+| [psxrecomp/docs/NETPLAY.md](psxrecomp/docs/NETPLAY.md) | Netplay features (rollback, SFU/ICE, dual-raster, disc gates) |
+| [psxrecomp/docs/GAME_PROJECT_SETUP.md](psxrecomp/docs/GAME_PROJECT_SETUP.md) | Title-repo layout, setup wizard / netplay build flags |
+| [DISC.md](DISC.md) | Disc identity + hashes |
+| [ISSUES.md](ISSUES.md) | Known bring-up issues |
+
 ## CI / release packages
 
 Setup-host workflow (no generated C, no private CI assets, no PGO in CI).
