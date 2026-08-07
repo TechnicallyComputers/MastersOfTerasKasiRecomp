@@ -264,6 +264,7 @@ jobs:
             -DMOTK_NATIVE=OFF \
             -DPSXRECOMP_FORCE_SETUP_HOST=ON \
             -DPSXRECOMP_ALLOW_NO_BIOS=ON \
+            -DPSX_SETUP_WIZARD=ON \
             -DPSX_NETPLAY=ON \
             -DRNET_ENABLE_ICE=ON \
             -DPSX_GAME_VERSION="${RELEASE_VERSION}" \
