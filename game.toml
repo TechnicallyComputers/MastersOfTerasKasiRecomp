@@ -82,6 +82,7 @@ mute_host_audio = true
 
 [controller]
 default_mode = "digital"
+lock_mode = true
 allow_hybrid = false
 
 # Online mount gate: data-track digests ([prepare_disc]) prove the right game;
