@@ -47,7 +47,8 @@ bios_hle_keep_intro = false
 fast_boot = false
 overlay_cache = true
 overlay_backend = "auto"
-turbo_loads = true
+turbo_loads = false
+offer_turbo_loads = false
 turbo_audio_sink = true
 idle_skip = true
 # Enhancement: force load-delay off for the offline session. MotK A/B
