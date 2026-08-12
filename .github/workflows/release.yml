@@ -1,19 +1,30 @@
-# Build MotK setup-host packages for Linux, Windows, macOS (arm64 + Intel).
-# Ships a GUI generate & rebuild host + sources + psxrecomp-game/bios tools —
-# not game C, not BIOS backends, not disc images. First-run Generate emits
-# OpenBIOS (+ optional SCPH1001) and game C locally, then rebuilds.
-# Later RetComM Updates reuse codegen-cache (host/UI-only → cmake, not regenerate).
+# Setup-host multi-platform release template for a PSXRecomp *game* repository.
 #
-# Template: psxrecomp/docs/ci/templates/setup-release.yml
-# Guide:    psxrecomp/docs/GAME_PROJECT_SETUP.md
-# Host-only: psxrecomp/docs/ci/HOST_ONLY_RELEASES.md
+# Install:
+#   mkdir -p .github/workflows
+#   cp psxrecomp/docs/ci/templates/setup-release.yml .github/workflows/release.yml
+# Then replace every YOUR_* token (or let setup_project / fill_tokens.py do it).
+# See docs/GAME_PROJECT_SETUP.md.
+#
+# Shared (do not fork these into the title):
+#   ./psxrecomp/.github/actions/{build-emitters,fetch-toolchain (optional embed),stage-setup-sdk}
+#   psxrecomp/tools/ci/*.sh
+#   psxrecomp/tools/{fetch_toolchain,stage_setup_sdk,bundle_mingw_dlls,package_setup_host}.sh
+#   psxrecomp/psxrecomp_cli.py  (CLI lives in the submodule — no psxrecomp-sdk/)
+#
+# Title-owned:
+#   CMake setup-host flags, thin scripts/package_setup_release.sh wrapper
 #
 # No private CI assets. No BIOS dumps. No generated/ required.
 # Do not set PSX_PGO in CI (PGO stays user-local after Generate).
+# Release hosts always build with PSX_HAVE_VULKAN (headers + glslc); runtime
+# still loads the ICD dynamically via SDL.
 #
-# Triggers:
-#   - workflow_dispatch — empty version auto-bumps patch (or set bump/version); optionally tags + publishes
-#   - push tags matching v* — builds + publishes that tag
+# workflow_dispatch: leave version empty to auto-bump patch (or choose bump).
+# Host-focused releases: CI never ships game C. Players Generate once; RetComM
+# Update reuses codegen-cache when ROM/BIOS/emitters match (cmake-only).
+# See docs/ci/HOST_ONLY_RELEASES.md. reuse_cached_emitters skips rebuilding
+# psxrecomp-game/bios when the psxrecomp SHA cache hits (host/UI bumps).
 
 name: Release builds
 
@@ -85,7 +96,7 @@ jobs:
             RAW="${{ github.event.inputs.version }}"
             BUMP="${{ github.event.inputs.bump || 'patch' }}"
             PUBLISH="${{ github.event.inputs.publish }}"
-            REUSE="${{ github.event.inputs.reuse_cached_emitters || 'true' }}"
+            REUSE="${{ github.event.inputs.reuse_cached_emitters }}"
           else
             RAW="${{ github.ref_name }}"
             BUMP="patch"
@@ -94,24 +105,31 @@ jobs:
           fi
           RAW="$(printf '%s' "${RAW}" | tr -d '[:space:]')"
           if [[ -z "${RAW}" ]]; then
-            LATEST="$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -1 || true)"
-            BASE="${LATEST#v}"
-            if [[ -z "${BASE}" && -f VERSION ]]; then
-              BASE="$(tr -d '[:space:]' <VERSION)"
-              BASE="${BASE#v}"
+            # Prefer shared helper when present (optional); else inline bump.
+            if [[ -x psxrecomp/tools/ci/normalize_version.sh ]]; then
+              eval "$(bash psxrecomp/tools/ci/normalize_version.sh --next "${BUMP}" | grep -E '^(VERSION|TAG)=')"
+              VER="${VERSION}"
+              TAG="${TAG}"
+            else
+              LATEST="$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -1 || true)"
+              BASE="${LATEST#v}"
+              if [[ -z "${BASE}" && -f VERSION ]]; then
+                BASE="$(tr -d '[:space:]' <VERSION)"
+                BASE="${BASE#v}"
+              fi
+              BASE="${BASE:-0.0.0}"
+              BASE="${BASE%%[-+]*}"
+              IFS=. read -r MA MI PA <<<"${BASE}"
+              MA="${MA:-0}"; MI="${MI:-0}"; PA="${PA:-0}"
+              case "${BUMP}" in
+                major) MA=$((MA + 1)); MI=0; PA=0 ;;
+                minor) MI=$((MI + 1)); PA=0 ;;
+                *) PA=$((PA + 1)) ;;
+              esac
+              VER="${MA}.${MI}.${PA}"
+              TAG="v${VER}"
+              echo "Auto-bumped ${BUMP}: ${LATEST:-none} → ${VER}"
             fi
-            BASE="${BASE:-0.0.0}"
-            BASE="${BASE%%[-+]*}"
-            IFS=. read -r MA MI PA <<<"${BASE}"
-            MA="${MA:-0}"; MI="${MI:-0}"; PA="${PA:-0}"
-            case "${BUMP}" in
-              major) MA=$((MA + 1)); MI=0; PA=0 ;;
-              minor) MI=$((MI + 1)); PA=0 ;;
-              *) PA=$((PA + 1)) ;;
-            esac
-            VER="${MA}.${MI}.${PA}"
-            TAG="v${VER}"
-            echo "Auto-bumped ${BUMP}: ${LATEST:-none} → ${VER}"
           else
             VER="${RAW#v}"
             if [[ ! "${VER}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.+-][A-Za-z0-9.+-]*)?$ ]]; then
@@ -130,7 +148,6 @@ jobs:
           echo "publish=${PUBLISH}" >>"$GITHUB_OUTPUT"
           echo "reuse_emitters=${REUSE}" >>"$GITHUB_OUTPUT"
           echo "Using version ${VER} (tag ${TAG}), publish=${PUBLISH}, reuse_emitters=${REUSE}"
-
   build:
     name: ${{ matrix.artifact }}
     needs: prepare
@@ -157,6 +174,7 @@ jobs:
       run:
         shell: ${{ matrix.shell }}
     env:
+      # Rename to match your packager (e.g. BPE_RELEASE_VERSION).
       RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
     steps:
       - name: Checkout
@@ -172,7 +190,8 @@ jobs:
           printf '%s\n' "${RELEASE_VERSION}" >VERSION
           echo "VERSION=$(cat VERSION)"
 
-      - name: Record pinned framework revisions
+      # Submodule gitlinks are the pin; this step only logs SHAs for the job.
+      - name: Record framework revisions
         shell: bash
         run: bash psxrecomp/tools/ci/record_pins.sh
 
@@ -257,6 +276,8 @@ jobs:
         with:
           artifact: ${{ matrix.artifact }}
 
+      # Host/UI-only bumps keep the same psxrecomp gitlink → cache hit skips
+      # rebuilding emitters (see reuse_cached_emitters / HOST_ONLY_RELEASES.md).
       - name: Emitter cache key
         id: emitter_cache
         shell: bash
@@ -284,6 +305,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Restored cache or fresh build must leave packager inputs in place.
           test -d build-recompiler
           find build-recompiler -type f \( -name 'psxrecomp-game*' -o -name 'psxrecomp-bios*' \) | head
           count="$(find build-recompiler -type f \( -name 'psxrecomp-game*' -o -name 'psxrecomp-bios*' \) | wc -l | tr -d ' ')"
@@ -357,19 +379,36 @@ jobs:
             unset PSXRECOMP_TOOLCHAIN_DIR TOOLCHAIN_DIR BPE_TOOLCHAIN_DIR RETCOMM_TOOLCHAIN_DIR || true
             unset CMAKE_PREFIX_PATH SDL3_DIR ZLIB_ROOT || true
           fi
+          # Setup host: no game C, no BIOS backends linked. clear_generated.sh
+          # already wiped generated/; end users Generate OpenBIOS (+ optional
+          # SCPH1001) locally via the wizard, then rebuild.
+          # Prefer -DPSXRECOMP_FORCE_SETUP_HOST=ON (psxrecomp_add_game_runtime).
+          # Legacy -DYOURGAME_FORCE_SETUP_HOST=ON still works if the title wires it.
+          # PSX_SETUP_WIZARD is required with FORCE_SETUP_HOST (CMakeLists
+          # ENABLE_SETUP_WIZARD + -D here). Without it the zip never opens
+          # first-run / Generate & rebuild.
           # Title root codegen_setup.c must define
           # psx_game_codegen_forward_if_built (see codegen_setup.c.in) or link
           # fails — main.cpp always calls it, including setup-host CI builds.
           # Netplay titles: set PSX_NETPLAY ON in CMakeLists *before*
-          # include(runtime.cmake). ENABLE_NETPLAY_IF_PRESENT alone is too late.
+          # include(runtime.cmake). ENABLE_NETPLAY_IF_PRESENT alone is too late
+          # (option() already cached OFF) and psx_netplay_sched.c still needs
+          # recomp_net/session.h. Also add -DPSX_NETPLAY=ON to this cmake
+          # invocation for CI belt-and-suspenders (do not leave it commented
+          # mid-continuation — that breaks the shell line).
+          # With PSX_NETPLAY, runtime.cmake defaults RNET_ENABLE_ICE=ON.
+          # recomp-net FetchContents libjuice via a pinned URL tarball (not
+          # git clone) so AppImage / mismatched libcurl hosts still configure.
+          # Offline: vendor under psxrecomp/lib/recomp-net/third_party/libjuice
+          # or pass -DRNET_LIBJUICE_ROOT=… / -DRNET_ENABLE_ICE=OFF.
+          # Add title-specific -D flags here if needed (e.g. -DMOTK_NATIVE=OFF).
+          # Netplay titles: also pass -DPSX_NETPLAY=ON here (belt-and-suspenders
+          # when CMakeLists already FORCE-caches it before include(runtime.cmake)).
           cmake -S . -B build-ci -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DMOTK_NATIVE=OFF \
             -DPSXRECOMP_FORCE_SETUP_HOST=ON \
             -DPSXRECOMP_ALLOW_NO_BIOS=ON \
             -DPSX_SETUP_WIZARD=ON \
-            -DPSX_NETPLAY=ON \
-            -DRNET_ENABLE_ICE=ON \
             -DPSX_GAME_VERSION="${RELEASE_VERSION}" \
             "${EXTRA[@]}" 2>&1 | tee build-ci-configure.log
           if ! grep -q 'Vulkan backend: headers' build-ci-configure.log; then
@@ -412,6 +451,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
+          # Artifact name uses the title zip prefix (e.g. bpe, motk).
           name: motk-${{ matrix.artifact }}
           path: dist/motk-*-${{ matrix.artifact }}.zip
           if-no-files-found: error
@@ -423,11 +463,13 @@ jobs:
     if: needs.prepare.outputs.publish == 'true'
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout (for tagging on workflow_dispatch)
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: actions/download-artifact@v4
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
           merge-multiple: false
@@ -448,7 +490,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if ! git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
-            git tag -a "${TAG}" -m "Masters of Teras Kasi ${TAG}"
+            git tag -a "${TAG}" -m "Masters of Teras Kasi Recompiled ${TAG}"
           fi
           if ! git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
             git push origin "refs/tags/${TAG}"
@@ -458,7 +500,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.prepare.outputs.tag }}
-          name: "Masters of Teras Kasi ${{ needs.prepare.outputs.tag }}"
+          # Quoted: titles may contain ':' (e.g. "Marvel vs. Capcom: …").
+          name: "Masters of Teras Kasi Recompiled ${{ needs.prepare.outputs.tag }}"
           files: |
             dist/motk-*.zip
           generate_release_notes: true
