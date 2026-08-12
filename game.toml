@@ -1,20 +1,20 @@
+# Autofilled by tools/new_project_layout/probe_disc.py from your legal dump.
+# Review before shipping. Runtime quirks / overlay seeds still need hand work.
+
 [game]
-name = "Star Wars: Masters of Teras Kasi"
+name = "MastersOfTerasKasiRecomp"
 id = "SLUS-00562"
 players = 2
-exe = "motk/SLUS_005.62"
-disc = "motk/Star Wars - Masters of Teras Kasi (USA).cue"
+exe = "disc/SLUS_005.62"
+disc = "disc/Star Wars - Masters of Teras Kasi (USA).cue"
 load_address = "0x80010000"
 entry_pc = "0x80065A44"
 text_size = "0x0009B800"
 stack_base = "0x801FFFF0"
 
-# Disc normalize via psxrecomp/tools/prepare_disc.py. Prefer the Redump
-# multi-track cue (data Track 01 + AUDIO). out_dir MUST match [game].exe
-# so psxrecomp-game finds the boot EXE after Generate. known_* digests are
-# for data Track 01 (verify/prepare hash the first BINARY FILE in the cue).
+# Digests are for data Track 01 (first BINARY FILE / TRACK 01).
 [prepare_disc]
-out_dir = "motk"
+out_dir = "disc"
 bin_name = "Star Wars - Masters of Teras Kasi (USA) (Track 01).bin"
 cue_name = "Star Wars - Masters of Teras Kasi (USA).cue"
 boot_exe = "SLUS_005.62"
@@ -30,75 +30,21 @@ known_sha1 = [
 seeds = "seeds/ghidra_funcs.txt"
 out_dir = "generated"
 strict = true
-# Intro FMV VLC leaves (phase_hot static samples) — host locality only.
-hot_funcs = ["0x8006A9F8", "0x8006CBE4"]
-# Emitter-level load-charge batching for those leaves: stack-local cycle
-# accumulator until IRQ/MMIO/exit (guest totals at barriers unchanged).
-# Requires Generate & rebuild (CLI / setup wizard).
-load_charge_batch = true
 
 [runtime]
-debug_port = 4520
-window_title = "Masters of Teras Kasi Recompiled"
+window_title = "MastersOfTerasKasiRecomp Recompiled"
 memcard_dir = "saves"
-disc_speed = "4x"
-bios_hle = true
-bios_hle_keep_intro = false
-fast_boot = false
-overlay_cache = true
-overlay_backend = "auto"
-# Load acceleration is OFF and mod-owned. The generic switch these two keys
-# drive is retired in the framework (players get "Fast Loading (host pacing)" /
-# "CD Speed" under Mods -> Quality of Life instead, both default-off), but this
-# title still pins a framework that predates that, where the keys ARE honoured.
-# So they stay here, explicitly false, until the pin moves — then they can go.
-#
-# turbo_loads = true forced fast-forward on with NO way for a player to turn it
-# off, because the launcher already stopped drawing a Turbo row. That shipped in
-# MegaManX6Recomp v1.0.4/v1.0.5 and fast-forwarded timed screens (its issue #14).
-turbo_loads = false
-offer_turbo_loads = false
-turbo_audio_sink = true
-idle_skip = true
-# Enhancement: force load-delay off for the offline session. MotK A/B
-# 2026-07-22: session arm → ~450 FPS but intro STR never starts MDEC
-# (same failure mode as load_accel.vsync_query). Keep OFF; faithful
-# delay holds ~45–55 intro FPS. Env PSX_FMV_LOAD_DELAY_RELAX=1 to A/B.
-fmv_load_delay_relax = false
-
-# load_accel.vsync_query is intentionally OFF for MotK.
-# A/B 2026-07-18: with VSync(-1) HLE enabled, intro STR never starts MDEC
-# (mdec_decode_count stayed 0, display disabled). With it disabled, MDEC/XA
-# run. Event-horizon_any made that worse (raced guest time). Re-enable only
-# after the HLE is validated against MotK FMV (not just the inter-movie gap).
 
 [video]
-# First-run / packaged default: OpenGL. Software remains an explicit opt-in
-# (settings.toml or launcher toggle). Netplay keeps OpenGL for present with
-# CPU-authoritative software raster (see ROLLBACK_MOTK_HOOKUP §88).
 renderer = "opengl"
 aspect_ratio = "4:3"
 
-# Local PGO for FMV host pace. Setup/Generate rebuild always passes --no-pgo.
-# Settings → SYSTEM → "Optimize FMV Playback" runs rebuild --force-pgo
-# (instrument → visible intro train → use) on existing generated C — no wizard.
-# Per-peer PGO is OK for rollback; digests must match, binaries need not.
-[pgo]
-enabled = false
-train_secs = 90
-train_runs = 2
-hide_video = false
-mute_host_audio = true
-
 [controller]
 default_mode = "digital"
-lock_mode = true
-allow_hybrid = false
 
-# Online mount gate: data-track digests ([prepare_disc]) prove the right game;
-# TOC policy proves the same drive geometry (GetTN track count). Track-01-only
-# dumps pass prepare hashes but desync FMV vs Redump multi-track cues.
-multitap_analog = false
+# Online mount gate: digests + track count + optional TOC fingerprint
+# (see docs/NETPLAY.md).
 [netplay]
 require_cue = true
 required_tracks = 17
+required_disc_fp = "11bd88305118b589bb2f478df76998aab1c09db64600c3305abd1d3be576e536"

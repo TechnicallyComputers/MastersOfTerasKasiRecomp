@@ -61,3 +61,6 @@ __pycache__/
 # Local BIOS (symlink or copy — do not commit)
 /bios/
 settings.toml
+
+# --- PSXRecomp setup-host (project studio) ---
+/disc/
