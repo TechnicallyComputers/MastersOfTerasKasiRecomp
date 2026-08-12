@@ -32,6 +32,10 @@ fi
 if [[ -f "${ROOT}/framework_pins.txt" ]]; then
   EXTRA_PROJECT+=(--project-file framework_pins.txt)
 fi
+# Optional in-game options defaults (titles that POST_BUILD-copy this file).
+if [[ -f "${ROOT}/game_options.toml" ]]; then
+  EXTRA_PROJECT+=(--project-file game_options.toml)
+fi
 
 cd "${ROOT}"
 exec bash "${PACKAGER}" \
