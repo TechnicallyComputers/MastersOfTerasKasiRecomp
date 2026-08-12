@@ -47,7 +47,17 @@ bios_hle_keep_intro = false
 fast_boot = false
 overlay_cache = true
 overlay_backend = "auto"
-turbo_loads = true
+# Load acceleration is OFF and mod-owned. The generic switch these two keys
+# drive is retired in the framework (players get "Fast Loading (host pacing)" /
+# "CD Speed" under Mods -> Quality of Life instead, both default-off), but this
+# title still pins a framework that predates that, where the keys ARE honoured.
+# So they stay here, explicitly false, until the pin moves — then they can go.
+#
+# turbo_loads = true forced fast-forward on with NO way for a player to turn it
+# off, because the launcher already stopped drawing a Turbo row. That shipped in
+# MegaManX6Recomp v1.0.4/v1.0.5 and fast-forwarded timed screens (its issue #14).
+turbo_loads = false
+offer_turbo_loads = false
 turbo_audio_sink = true
 idle_skip = true
 # Enhancement: force load-delay off for the offline session. MotK A/B
