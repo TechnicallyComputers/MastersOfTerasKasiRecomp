@@ -6,6 +6,12 @@
 [![GitHub release](https://img.shields.io/github/v/release/TechnicallyComputers/MastersOfTerasKasiRecomp)](https://github.com/TechnicallyComputers/MastersOfTerasKasiRecomp/releases/latest)
 <!-- /retcomm-readme-metrics -->
 
+<!-- retcomm-readme-boxart -->
+<p align="center">
+  <img src="launcher_assets/img/boxart.png" alt="MastersOfTerasKasi box art" width="280">
+</p>
+<!-- /retcomm-readme-boxart -->
+
 *Star Wars: Masters of Teras Kasi* (USA, **SLUS-00562**, Oct 31, 1997) —
 game project for [PSXRecomp](https://github.com/TechnicallyComputers/psxrecomp).
 
