@@ -1023,25 +1023,25 @@ addr	size	name	confidence	args	ret	callers	callees	frame	saved	tags
 0x8006BDC0	820	func_8006BDC0	low	1	u32	1	0	0		leaf|orphan
 0x8006C0F4	988	func_8006C0F4	medium	2	u32	1	2	32	s0|s1|ra	orphan
 0x8006C4D0	532	func_8006C4D0	low	0	u32	1	0	0		leaf|orphan
-0x8006C6E4	16	bios_A0_39_InitHeap	verified	0	void	1	0	0		bios|leaf
-0x8006C6F4	16	bios_A0_70__bu_init	verified	0	void	1	0	0		bios|leaf
-0x8006C704	16	bios_B0_07_DeliverEvent	verified	0	void	5	0	0		bios|leaf
-0x8006C714	16	bios_B0_08_OpenEvent	verified	0	void	2	0	0		bios|leaf
-0x8006C724	16	bios_B0_09_CloseEvent	verified	0	void	2	0	0		bios|leaf|orphan
-0x8006C734	16	bios_B0_0B_TestEvent	verified	0	void	9	0	0		bios|leaf
-0x8006C744	16	bios_B0_0C_EnableEvent	verified	0	void	2	0	0		bios|leaf
-0x8006C754	16	bios_B0_0D_DisableEvent	verified	0	void	2	0	0		bios|leaf|orphan
+0x8006C6E4	16	bios_A0_39_InitHeap	verified	0	void	1	0	0		bios|leaf|indirect
+0x8006C6F4	16	bios_A0_70__bu_init	verified	0	void	1	0	0		bios|leaf|indirect
+0x8006C704	16	bios_B0_07_DeliverEvent	verified	0	void	5	0	0		bios|leaf|indirect
+0x8006C714	16	bios_B0_08_OpenEvent	verified	0	void	2	0	0		bios|leaf|indirect
+0x8006C724	16	bios_B0_09_CloseEvent	verified	0	void	2	0	0		bios|leaf|orphan|indirect
+0x8006C734	16	bios_B0_0B_TestEvent	verified	0	void	9	0	0		bios|leaf|indirect
+0x8006C744	16	bios_B0_0C_EnableEvent	verified	0	void	2	0	0		bios|leaf|indirect
+0x8006C754	16	bios_B0_0D_DisableEvent	verified	0	void	2	0	0		bios|leaf|orphan|indirect
 0x8006C764	16	func_8006C764	high	0	void	14	0	0		leaf|syscall
 0x8006C774	16	func_8006C774	high	0	void	12	0	0		leaf|syscall
-0x8006C784	16	bios_B0_32_FileOpen	verified	0	void	3	0	0		bios|leaf
-0x8006C794	16	bios_B0_33_FileSeek	verified	0	void	2	0	0		bios|leaf
-0x8006C7A4	16	bios_B0_34_FileRead	verified	0	void	1	0	0		bios|leaf
-0x8006C7B4	16	bios_B0_35_FileWrite	verified	0	void	1	0	0		bios|leaf
-0x8006C7C4	16	bios_B0_36_FileClose	verified	0	void	3	0	0		bios|leaf
-0x8006C7D4	16	bios_B0_41_FormatDevice	verified	0	void	1	0	0		bios|leaf|orphan
-0x8006C7E4	16	bios_B0_42_firstfile	verified	0	void	1	0	0		bios|leaf
-0x8006C7F4	16	bios_B0_43_nextfile	verified	0	void	1	0	0		bios|leaf
-0x8006C804	16	bios_B0_45_FileDelete	verified	0	void	1	0	0		bios|leaf
+0x8006C784	16	bios_B0_32_FileOpen	verified	0	void	3	0	0		bios|leaf|indirect
+0x8006C794	16	bios_B0_33_FileSeek	verified	0	void	2	0	0		bios|leaf|indirect
+0x8006C7A4	16	bios_B0_34_FileRead	verified	0	void	1	0	0		bios|leaf|indirect
+0x8006C7B4	16	bios_B0_35_FileWrite	verified	0	void	1	0	0		bios|leaf|indirect
+0x8006C7C4	16	bios_B0_36_FileClose	verified	0	void	3	0	0		bios|leaf|indirect
+0x8006C7D4	16	bios_B0_41_FormatDevice	verified	0	void	1	0	0		bios|leaf|orphan|indirect
+0x8006C7E4	16	bios_B0_42_firstfile	verified	0	void	1	0	0		bios|leaf|indirect
+0x8006C7F4	16	bios_B0_43_nextfile	verified	0	void	1	0	0		bios|leaf|indirect
+0x8006C804	16	bios_B0_45_FileDelete	verified	0	void	1	0	0		bios|leaf|indirect
 0x8006C814	160	func_8006C814	high	3	u32	1	0	0		leaf
 0x8006C8B4	56	func_8006C8B4	high	1	u32	3	0	0		leaf
 0x8006C8EC	52	func_8006C8EC	high	1	u32	1	0	0		leaf
@@ -1050,20 +1050,20 @@ addr	size	name	confidence	args	ret	callers	callees	frame	saved	tags
 0x8006C98C	104	func_8006C98C	verified	4	void	1	3	40	s0|s1|s2|s3|ra	
 0x8006C9F4	104	func_8006C9F4	verified	4	void	1	3	40	s0|s1|s2|s3|ra	
 0x8006CA5C	40	func_8006CA5C	verified	0	void	1	2	24	ra	
-0x8006CA84	16	bios_B0_12_InitPad	verified	0	void	1	0	0		bios|leaf
-0x8006CA94	16	bios_B0_13_StartPad	verified	0	void	1	0	0		bios|leaf
-0x8006CAA4	16	bios_B0_15_OutdatedPadInitAndStart	verified	0	void	1	0	0		bios|leaf
-0x8006CAB4	16	bios_B0_5B_ChangeClearPad	verified	0	void	8	0	0		bios|leaf
+0x8006CA84	16	bios_B0_12_InitPad	verified	0	void	1	0	0		bios|leaf|indirect
+0x8006CA94	16	bios_B0_13_StartPad	verified	0	void	1	0	0		bios|leaf|indirect
+0x8006CAA4	16	bios_B0_15_OutdatedPadInitAndStart	verified	0	void	1	0	0		bios|leaf|indirect
+0x8006CAB4	16	bios_B0_5B_ChangeClearPad	verified	0	void	8	0	0		bios|leaf|indirect
 0x8006CAC4	80	func_8006CAC4	high	0	u32	2	2	0		indirect
-0x8006CB14	16	bios_A0_44_FlushCache	verified	0	void	5	0	0		bios|leaf
+0x8006CB14	16	bios_A0_44_FlushCache	verified	0	void	5	0	0		bios|leaf|indirect
 0x8006CB24	80	func_8006CB24	verified	1	u32	1	3	24	ra	
 0x8006CB74	48	func_8006CB74	medium	0	u32	0	1	24	ra	orphan
 0x8006CBA4	32	func_8006CBA4	medium	0	void	0	1	24	ra	orphan
-0x8006CBC4	16	bios_B0_14_StopPad	verified	0	void	1	0	0		bios|leaf|orphan
-0x8006CBD4	16	bios_B0_16_OutdatedPadGetButtons	verified	0	void	1	0	0		bios|leaf|orphan
+0x8006CBC4	16	bios_B0_14_StopPad	verified	0	void	1	0	0		bios|leaf|orphan|indirect
+0x8006CBD4	16	bios_B0_16_OutdatedPadGetButtons	verified	0	void	1	0	0		bios|leaf|orphan|indirect
 0x8006CBE4	328	func_8006CBE4	high	1	u32	20	1	0	s0|s1|ra	
 0x8006CD2C	156	func_8006CD2C	verified	2	u32	1	3	32	ra	
-0x8006CDC8	16	bios_C0_0A_ChangeClearRCnt	verified	0	void	2	0	0		bios|leaf
+0x8006CDC8	16	bios_C0_0A_ChangeClearRCnt	verified	0	void	2	0	0		bios|leaf|indirect
 0x8006CDD8	48	func_8006CDD8	high	0	u32	7	0	0	ra	indirect
 0x8006CE08	48	func_8006CE08	high	0	u32	4	0	0	ra	indirect
 0x8006CE38	48	func_8006CE38	high	0	u32	7	0	0	ra	indirect
@@ -1080,10 +1080,10 @@ addr	size	name	confidence	args	ret	callers	callees	frame	saved	tags
 0x8006D388	172	func_8006D388	high	0	u32	0	2	24	s0|ra	addr_taken
 0x8006D434	136	func_8006D434	medium	0	u32	0	2	24	s0|ra	orphan
 0x8006D4BC	44	func_8006D4BC	verified	2	u32	1	0	8		leaf
-0x8006D4F0	24	bios_A0_72_CdRemove	verified	0	void	1	0	0		bios|leaf
-0x8006D508	16	bios_B0_17_ReturnFromException	verified	0	void	1	0	0		bios|leaf
-0x8006D518	16	bios_B0_18_SetDefaultExitFromException	verified	0	void	1	0	0		bios|leaf
-0x8006D528	16	bios_B0_19_SetCustomExitFromException	verified	0	void	2	0	0		bios|leaf
+0x8006D4F0	24	bios_A0_72_CdRemove	verified	0	void	1	0	0		bios|leaf|indirect
+0x8006D508	16	bios_B0_17_ReturnFromException	verified	0	void	1	0	0		bios|leaf|indirect
+0x8006D518	16	bios_B0_18_SetDefaultExitFromException	verified	0	void	1	0	0		bios|leaf|indirect
+0x8006D528	16	bios_B0_19_SetCustomExitFromException	verified	0	void	2	0	0		bios|leaf|indirect
 0x8006D538	88	func_8006D538	verified	0	u32	1	4	24	ra	
 0x8006D590	120	func_8006D590	high	0	u32	1	0	0	s0|s1|ra	addr_taken|indirect
 0x8006D608	44	func_8006D608	high	2	u32	1	0	0		leaf|addr_taken
@@ -1195,7 +1195,7 @@ addr	size	name	confidence	args	ret	callers	callees	frame	saved	tags
 0x800710E0	364	func_800710E0	verified	0	u32	5	3	32	ra	
 0x8007124C	220	func_8007124C	high	1	u32	1	0	0		leaf
 0x80071328	44	func_80071328	verified	3	u32	3	0	8		leaf
-0x80071354	16	bios_A0_49_GPU_cw	verified	0	void	1	0	0		bios|leaf
+0x80071354	16	bios_A0_49_GPU_cw	verified	0	void	1	0	0		bios|leaf|indirect
 0x80071364	16	func_80071364	high	1	u32	1	0	0		leaf
 0x80071374	104	func_80071374	verified	1	u32	1	1	24	s0|ra	
 0x800713DC	64	func_800713DC	medium	0	u32	0	1	32	ra	orphan
@@ -1270,28 +1270,28 @@ addr	size	name	confidence	args	ret	callers	callees	frame	saved	tags
 0x800744EC	408	func_800744EC	high	2	u32	3	0	0		leaf
 0x8007468C	384	func_8007468C	high	2	u32	9	0	0		leaf|break
 0x8007480C	104	func_8007480C	high	0	u32	1	4	0		indirect
-0x800748AC	24	bios_B0_38_exit	verified	0	void	24	0	0		bios|leaf|addr_taken
-0x800748C4	24	bios_B0_3F_std_out_puts	verified	0	void	9	0	0		bios|leaf
-0x800748DC	16	bios_A0_13_setjmp	verified	0	void	1	0	0		bios|leaf
-0x800748EC	16	bios_A0_15_strcat	verified	0	void	8	0	0		bios|leaf
-0x800748FC	16	bios_A0_16_strncat	verified	0	void	2	0	0		bios|leaf
-0x8007490C	16	bios_A0_17_strcmp	verified	0	void	6	0	0		bios|leaf
-0x8007491C	16	bios_A0_18_strncmp	verified	0	void	3	0	0		bios|leaf
-0x8007492C	16	bios_A0_19_strcpy	verified	0	void	2	0	0		bios|leaf
-0x8007493C	16	bios_A0_1A_strncpy	verified	0	void	1	0	0		bios|leaf
-0x8007494C	16	bios_A0_1B_strlen	verified	0	void	13	0	0		bios|leaf
-0x8007495C	16	bios_A0_2A_memcpy	verified	0	void	6	0	0		bios|leaf
-0x8007496C	16	bios_A0_2B_memset	verified	0	void	15	0	0		bios|leaf
-0x8007497C	16	bios_A0_2F_rand	verified	0	void	9	0	0		bios|leaf
-0x8007498C	16	bios_A0_30_srand	verified	0	void	2	0	0		bios|leaf
-0x8007499C	16	bios_A0_31_qsort	verified	0	void	1	0	0		bios|leaf
-0x800749AC	16	bios_A0_33_malloc	verified	0	void	1	0	0		bios|leaf
-0x800749BC	16	bios_A0_34_free	verified	0	void	3	0	0		bios|leaf
-0x800749CC	16	bios_A0_37_calloc	verified	0	void	2	0	0		bios|leaf|orphan
-0x800749DC	16	bios_A0_3F_printf	verified	0	void	41	0	0		bios|leaf
+0x800748AC	24	bios_B0_38_exit	verified	0	void	24	0	0		bios|leaf|addr_taken|indirect
+0x800748C4	24	bios_B0_3F_std_out_puts	verified	0	void	9	0	0		bios|leaf|indirect
+0x800748DC	16	bios_A0_13_setjmp	verified	0	void	1	0	0		bios|leaf|indirect
+0x800748EC	16	bios_A0_15_strcat	verified	0	void	8	0	0		bios|leaf|indirect
+0x800748FC	16	bios_A0_16_strncat	verified	0	void	2	0	0		bios|leaf|indirect
+0x8007490C	16	bios_A0_17_strcmp	verified	0	void	6	0	0		bios|leaf|indirect
+0x8007491C	16	bios_A0_18_strncmp	verified	0	void	3	0	0		bios|leaf|indirect
+0x8007492C	16	bios_A0_19_strcpy	verified	0	void	2	0	0		bios|leaf|indirect
+0x8007493C	16	bios_A0_1A_strncpy	verified	0	void	1	0	0		bios|leaf|indirect
+0x8007494C	16	bios_A0_1B_strlen	verified	0	void	13	0	0		bios|leaf|indirect
+0x8007495C	16	bios_A0_2A_memcpy	verified	0	void	6	0	0		bios|leaf|indirect
+0x8007496C	16	bios_A0_2B_memset	verified	0	void	15	0	0		bios|leaf|indirect
+0x8007497C	16	bios_A0_2F_rand	verified	0	void	9	0	0		bios|leaf|indirect
+0x8007498C	16	bios_A0_30_srand	verified	0	void	2	0	0		bios|leaf|indirect
+0x8007499C	16	bios_A0_31_qsort	verified	0	void	1	0	0		bios|leaf|indirect
+0x800749AC	16	bios_A0_33_malloc	verified	0	void	1	0	0		bios|leaf|indirect
+0x800749BC	16	bios_A0_34_free	verified	0	void	3	0	0		bios|leaf|indirect
+0x800749CC	16	bios_A0_37_calloc	verified	0	void	2	0	0		bios|leaf|orphan|indirect
+0x800749DC	16	bios_A0_3F_printf	verified	0	void	41	0	0		bios|leaf|indirect
 0x800749EC	12	func_800749EC	low	4	void	2	0	0		leaf
 0x800749F8	2128	func_800749F8	medium	2	u32	0	3	584	s0|s1|s2|s3|s4|s5|s6|ra	orphan
-0x80075248	16	bios_A0_2E_memchr	verified	0	void	1	0	0		bios|leaf|orphan
+0x80075248	16	bios_A0_2E_memchr	verified	0	void	1	0	0		bios|leaf|orphan|indirect
 0x80075258	108	func_80075258	low	3	u32	1	0	0		leaf|orphan
 0x800752C4	736	func_800752C4	medium	4	u32	0	6	104	s0|s1|s2|s3|s4|s5|ra	orphan
 0x800755A4	68	func_800755A4	low	4	u32	1	0	0		leaf|orphan
@@ -1304,19 +1304,19 @@ addr	size	name	confidence	args	ret	callers	callees	frame	saved	tags
 0x80075B08	216	func_80075B08	low	4	u32	0	0	0		leaf|orphan
 0x80075BE0	116	func_80075BE0	medium	3	u32	1	1	40	s0|ra	orphan
 0x80075C54	104	func_80075C54	medium	2	u32	2	1	24	ra	orphan
-0x80075CBC	16	bios_A0_AB	verified	0	void	1	0	0		bios|leaf
-0x80075CCC	16	bios_A0_AC	verified	0	void	2	0	0		bios|leaf
-0x80075CDC	16	bios_B0_4F__card_read	verified	0	void	1	0	0		bios|leaf
-0x80075CEC	16	bios_B0_50__new_card	verified	0	void	2	0	0		bios|leaf
-0x80075CFC	16	bios_B0_5D_wait_card_status	verified	0	void	2	0	0		bios|leaf
+0x80075CBC	16	bios_A0_AB	verified	0	void	1	0	0		bios|leaf|indirect
+0x80075CCC	16	bios_A0_AC	verified	0	void	2	0	0		bios|leaf|indirect
+0x80075CDC	16	bios_B0_4F__card_read	verified	0	void	1	0	0		bios|leaf|indirect
+0x80075CEC	16	bios_B0_50__new_card	verified	0	void	2	0	0		bios|leaf|indirect
+0x80075CFC	16	bios_B0_5D_wait_card_status	verified	0	void	2	0	0		bios|leaf|indirect
 0x80075D0C	56	func_80075D0C	verified	1	void	2	2	24	s0|ra	
-0x80075D44	16	bios_B0_4E__card_write	verified	0	void	1	0	0		bios|leaf
+0x80075D44	16	bios_B0_4E__card_write	verified	0	void	1	0	0		bios|leaf|indirect
 0x80075D54	84	func_80075D54	verified	1	void	1	6	24	s0|ra	
 0x80075DA8	56	func_80075DA8	verified	0	void	1	4	24	ra	
 0x80075DE0	48	func_80075DE0	medium	0	void	1	3	24	ra	orphan
-0x80075E10	16	bios_B0_4A_InitCard	verified	0	void	1	0	0		bios|leaf
-0x80075E20	16	bios_B0_4B_StartCard	verified	0	void	1	0	0		bios|leaf
-0x80075E30	16	bios_B0_4C_StopCard	verified	0	void	1	0	0		bios|leaf|orphan
+0x80075E10	16	bios_B0_4A_InitCard	verified	0	void	1	0	0		bios|leaf|indirect
+0x80075E20	16	bios_B0_4B_StartCard	verified	0	void	1	0	0		bios|leaf|indirect
+0x80075E30	16	bios_B0_4C_StopCard	verified	0	void	1	0	0		bios|leaf|orphan|indirect
 0x80075E40	88	func_80075E40	high	0	u32	1	0	0		leaf|addr_taken|indirect
 0x80075E98	136	func_80075E98	high	0	u32	1	3	0		indirect
 0x80075F20	48	func_80075F20	high	0	void	2	1	0		addr_taken
