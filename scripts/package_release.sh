@@ -1,157 +1,62 @@
 #!/usr/bin/env bash
-# Stage a MotK release zip next to the built runtime.
+# Thin wrapper around the shared psxrecomp bundled-release packager.
+# Autofilled by tools/new_project_layout/setup_project.{sh,ps1}.
 #
-# Ships the redistributable OpenBIOS image this build was compiled against
-# (bios/openbios.bin). Does NOT include a game disc or retail SCPH* dumps.
+# Ships the COMPILED game built from this repo's committed generated/ C:
+# executable, runtime data, bundled OpenBIOS, mod catalog, overlay toolchain.
+# No sources, emitters, CLI, generated C, or BIOS dumps.
 #
 # Usage:
-#   scripts/package_release.sh <build-dir> <artifact-tag>
-# Example:
-#   scripts/package_release.sh build-release linux-x64
+#   scripts/package_release.sh <build-dir> <artifact-tag> [recompiler-build-dir]
 #
 # Writes: dist/motk-<VERSION>-<artifact-tag>.zip
-
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD_DIR="${1:-}"
 ARTIFACT_TAG="${2:-}"
+RECOMPILER_BUILD="${3:-build-recompiler}"
 
 if [[ -z "${BUILD_DIR}" || -z "${ARTIFACT_TAG}" ]]; then
-  echo "usage: $0 <build-dir> <artifact-tag>" >&2
+  echo "usage: $0 <build-dir> <artifact-tag> [recompiler-build-dir]" >&2
   exit 2
 fi
 
-VERSION="$(tr -d '[:space:]' < "${ROOT}/VERSION")"
-if [[ -z "${VERSION}" ]]; then
-  echo "VERSION file is empty" >&2
+PACKAGER="${ROOT}/psxrecomp/tools/package_game_release.sh"
+if [[ ! -f "${PACKAGER}" ]]; then
+  echo "error: missing ${PACKAGER} (psxrecomp submodule predates bundled releases -- bump it)" >&2
   exit 1
 fi
+chmod +x "${PACKAGER}" 2>/dev/null || true
 
-BUILD_DIR="$(cd "${BUILD_DIR}" && pwd)"
-DIST="${ROOT}/dist"
-STAGE="${DIST}/stage-${ARTIFACT_TAG}"
-ZIP_NAME="motk-${VERSION}-${ARTIFACT_TAG}.zip"
-
-rm -rf "${STAGE}"
-mkdir -p "${STAGE}" "${DIST}"
-rm -f "${DIST}/${ZIP_NAME}"
-
-# Exe name is derived from WINDOW_TITLE → Masters_of_Teras_Kasi_Recompiled
-EXE=""
-for cand in \
-  "${BUILD_DIR}/Masters_of_Teras_Kasi_Recompiled" \
-  "${BUILD_DIR}/Masters_of_Teras_Kasi_Recompiled.exe" \
-  "${BUILD_DIR}/Release/Masters_of_Teras_Kasi_Recompiled.exe" \
-  "${BUILD_DIR}/psx-runtime" \
-  "${BUILD_DIR}/psx-runtime.exe"
-do
-  if [[ -f "${cand}" ]]; then
-    EXE="${cand}"
-    break
+EXTRA=()
+# Overlay shard cache. It is compiled FROM THE DISC, so CI (no disc) cannot
+# build one: the committed static AOT shard is linked into the executable and
+# the bundled overlay_toolchain/ compiles the rest from the player's disc at
+# runtime. A developer packaging locally with a cache can ship it instead:
+#   PSX_OVERLAY_CACHE_ROOT=/path/to/cache scripts/package_release.sh ...
+if [[ -n "${PSX_OVERLAY_CACHE_ROOT:-}" ]]; then
+  EXTRA+=(--overlay-cache-root "${PSX_OVERLAY_CACHE_ROOT}")
+else
+  EXTRA+=(--ship-without-overlay-cache-because \
+    "no disc at package time: the committed static AOT shard is compiled in and overlay_toolchain/ autocompiles the rest on the player's machine")
+fi
+# Extra docs shipped at the zip root (DISC.md tells players which dump works).
+for _doc in DISC.md; do
+  if [[ -f "${ROOT}/${_doc}" ]]; then
+    EXTRA+=(--doc "${_doc}")
   fi
 done
 
-if [[ -z "${EXE}" ]]; then
-  echo "error: runtime executable not found under ${BUILD_DIR}" >&2
-  ls -la "${BUILD_DIR}" >&2 || true
-  exit 1
-fi
-
-cp -a "${EXE}" "${STAGE}/"
-
-# recomp-ui POST_BUILD stages a flat assets/fonts + assets/img next to the exe.
-# (Repo source layout is assets/common|consoles/ — do not pack that.)
-EXE_DIR="$(dirname "${EXE}")"
-if [[ ! -d "${EXE_DIR}/assets/fonts" || ! -d "${EXE_DIR}/assets/img" ]]; then
-  echo "error: ${EXE_DIR}/assets/{fonts,img} missing — rebuild psx-runtime" >&2
-  exit 1
-fi
-mkdir -p "${STAGE}/assets"
-cp -a "${EXE_DIR}/assets/fonts" "${STAGE}/assets/"
-cp -a "${EXE_DIR}/assets/img" "${STAGE}/assets/"
-
-if [[ ! -f "${STAGE}/assets/fonts/LatoLatin-Regular.ttf" ]]; then
-  echo "error: assets/fonts incomplete (missing LatoLatin-Regular.ttf)" >&2
-  exit 1
-fi
-if [[ ! -f "${STAGE}/assets/img/boxart.tga" ]]; then
-  # MotK boxart is a POST_BUILD overlay; allow packing from the repo tree.
-  if [[ -f "${ROOT}/launcher_assets/img/boxart.tga" ]]; then
-    cp -a "${ROOT}/launcher_assets/img/boxart.tga" "${STAGE}/assets/img/boxart.tga"
-  else
-    echo "error: assets/img/boxart.tga missing (build POST_BUILD or launcher_assets/)" >&2
-    exit 1
-  fi
-fi
-
-# Bundled OpenBIOS — required at runtime next to the exe (identity-matched to
-# the compiled-in OpenBIOS backend). Prefer POST_BUILD staging beside the
-# binary; fall back to the tree copy used as the CMake source.
-OPENBIOS_BIN=""
-OPENBIOS_LICENSE=""
-for cand in \
-  "${EXE_DIR}/bios/openbios.bin" \
-  "${BUILD_DIR}/bios/openbios.bin" \
-  "${ROOT}/psxrecomp/bios/openbios.bin"
-do
-  if [[ -f "${cand}" ]]; then
-    OPENBIOS_BIN="${cand}"
-    break
-  fi
-done
-for cand in \
-  "${EXE_DIR}/bios/OpenBIOS.LICENSE" \
-  "${BUILD_DIR}/bios/OpenBIOS.LICENSE" \
-  "${ROOT}/psxrecomp/bios/OpenBIOS.LICENSE"
-do
-  if [[ -f "${cand}" ]]; then
-    OPENBIOS_LICENSE="${cand}"
-    break
-  fi
-done
-
-if [[ -z "${OPENBIOS_BIN}" ]]; then
-  echo "error: bios/openbios.bin not found (rebuild psx-runtime to stage it)" >&2
-  exit 1
-fi
-
-mkdir -p "${STAGE}/bios"
-cp -a "${OPENBIOS_BIN}" "${STAGE}/bios/openbios.bin"
-if [[ -n "${OPENBIOS_LICENSE}" ]]; then
-  cp -a "${OPENBIOS_LICENSE}" "${STAGE}/bios/OpenBIOS.LICENSE"
-fi
-
-cp -a "${ROOT}/game.toml" "${STAGE}/"
-cp -a "${ROOT}/VERSION" "${STAGE}/"
-
-cat > "${STAGE}/README.txt" <<EOF
-Masters of Teras Kasi Recompiled ${VERSION}
-Platform pack: ${ARTIFACT_TAG}
-
-BIOS
-  This build ships OpenBIOS (bios/openbios.bin) — leave the launcher BIOS
-  setting on "Bundled BIOS". Retail dumps (e.g. SCPH1001.BIN) are NOT
-  accepted unless the binary was compiled from that exact image.
-
-Game disc
-  On first launch, select your legally obtained Masters of Teras Kasi
-  disc image (.cue/.bin). The disc is not included in this zip.
-
-Netplay lobbies match on game title + this VERSION string.
-EOF
-
-(
-  cd "${STAGE}"
-  if command -v zip >/dev/null 2>&1; then
-    zip -r -q "${DIST}/${ZIP_NAME}" .
-  else
-    # Fallback (macOS / minimal images): tar.gz with .zip name avoided —
-    # prefer real zip. Install zip in CI.
-    echo "error: zip not found; install zip to package releases" >&2
-    exit 1
-  fi
-)
-
-rm -rf "${STAGE}"
-echo "Wrote ${DIST}/${ZIP_NAME}"
+cd "${ROOT}"
+exec bash "${PACKAGER}" \
+  --root "${ROOT}" \
+  --build-dir "${BUILD_DIR}" \
+  --artifact "${ARTIFACT_TAG}" \
+  --zip-prefix motk \
+  --exe-name Masters_of_Teras_Kasi_Recompiled \
+  --display-name "Masters of Teras Kasi Recompiled" \
+  --recompiler-build "${RECOMPILER_BUILD}" \
+  --version-env RELEASE_VERSION \
+  --disc-hint "your legally owned MastersOfTerasKasi disc" \
+  "${EXTRA[@]}"

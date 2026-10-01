@@ -6,7 +6,6 @@
 
 # Setup-host releases: players Generate game C locally (CI clears generated/).
 # Keep /generated/ gitignored; regenerate with psxrecomp_cli.py / the wizard.
-/generated/
 
 # Release packaging artifacts
 /release-stage/
@@ -64,3 +63,6 @@ settings.toml
 
 # --- PSXRecomp setup-host (project studio) ---
 /disc/
+
+# --- PSXRecomp (project studio) ---
+/analysis/
